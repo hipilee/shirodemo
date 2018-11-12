@@ -1,8 +1,9 @@
-package com.myz.shirodemo.service;
+package com.myz.shirodemo.service.impl;
 
 
 import com.myz.shirodemo.common.utils.UUIDUtil;
 import com.myz.shirodemo.dao.UserMapper;
+import com.myz.shirodemo.service.BaseService;
 import org.apache.shiro.crypto.hash.SimpleHash;
 import org.apache.shiro.util.ByteSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,12 +23,11 @@ public class BaseServiceImpl implements BaseService {
     }
 
     @Override
-    public boolean registerData(String username, String password) {
-        // 生成uuid
-        String id = UUIDUtil.getOneUUID();
+    public boolean registerData(String telphone,String user_name, String password) {
+
 
         // 将用户名作为盐值
-        ByteSource salt = ByteSource.Util.bytes(username);
+        ByteSource salt = ByteSource.Util.bytes(user_name);
         /*
         * MD5加密：
         * 使用SimpleHash类对原始密码进行加密。
@@ -40,12 +40,12 @@ public class BaseServiceImpl implements BaseService {
         String newPs = new SimpleHash("MD5", password, salt, 1024).toHex();
 
         Map<String, String> dataMap = new HashMap<>();
-        dataMap.put("id", id);
-        dataMap.put("username", username);
+        dataMap.put("telphone", telphone);
+        dataMap.put("user_name", user_name);
         dataMap.put("password", newPs);
 
         // 看数据库中是否存在该账户
-        Map<String, Object> userInfo = queryInfoByUsername(username);
+        Map<String, Object> userInfo = queryInfoByUsername(user_name);
         if(userInfo == null) {
             userMapper.insertData(dataMap);
             return true;
