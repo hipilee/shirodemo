@@ -11,7 +11,7 @@ server:
 
 #公共配置与profiles选择无关
 mybatis:
-  typeAliasesPackage: com.myz.shirodemo.dao.entity
+  typeAliasesPackage: com.aotfx.mobile.dao.entity
   mapperLocations: classpath:mapper/*.xml
 
 commonDS:
