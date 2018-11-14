@@ -1,4 +1,4 @@
-package com.aotfx.mobile.common.utils;
+package com.aotfx.mobile.beans;
 
 import java.util.Date;
 

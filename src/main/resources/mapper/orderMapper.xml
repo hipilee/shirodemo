@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.aotfx.mobile.dao.nj4x.OrderMapper">
+
+    <insert id="insertActiveOrdersBatch" parameterType="java.util.List">
+        insert into active_orders
+        (user,orderNumber,openTime,type,size,symbol,openPrice,sellLoss,takeProfit,currentPrice,comment,commission,taxes,swap,profit;)
+        values
+        <foreach collection="list" item="order" separator=",">
+            (
+            #{order.user}, #{order.orderNumber},#{order.openTime},#{order.type},#{order.size}, #{order.openPrice},
+            #{order.sellLoss},#{order.takeProfit},#{order.currentPrice},#{order.comment},
+            #{order.commission},#{order.taxes}, #{order.swap}, #{order.profit}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteActiveOrdersByUser" parameterType="java.lang.String">
+        delete from active_orders where user = #{user}
+    </delete>
+
+    <insert id="deleteOrders">
+        delete from active_orders where user = #{user}
+        AND orderNumber not in
+        <foreach collection="list" item="order" separator="," open="(" close=")">
+            #{order.orderNumber}
+        </foreach>
+    </insert>
+
+
+</mapper>
