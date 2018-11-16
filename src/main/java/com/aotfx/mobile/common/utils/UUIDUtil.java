@@ -31,4 +31,8 @@ public class UUIDUtil {
         }
         return ss;
     }
+
+    public static void main(String[] args){
+        System.out.println(UUIDUtil.getOneUUID());
+    }
 }

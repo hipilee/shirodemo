@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >  
-<mapper namespace="com.aotfx.mobile.dao.JobAndTriggerMapper">
-    
+<mapper namespace="com.aotfx.mobile.dao.mapper.JobAndTriggerMapper">
+
     <select id="getJobAndTriggerDetails" resultType="com.aotfx.mobile.dao.entity.JobAndTrigger">
 			SELECT
-				qrtz_job_details.JOB_NAME,
-				qrtz_job_details.JOB_GROUP,
-				qrtz_job_details.JOB_CLASS_NAME,
-				qrtz_triggers.TRIGGER_NAME,
-				qrtz_triggers.TRIGGER_GROUP,
-				qrtz_cron_triggers.CRON_EXPRESSION,
-				qrtz_cron_triggers.TIME_ZONE_ID
+				qrtz_job_details.JOB_NAME AS jobName,
+				qrtz_job_details.JOB_GROUP AS jobGroup,
+				qrtz_job_details.JOB_CLASS_NAME AS jobClassName,
+				qrtz_triggers.TRIGGER_NAME AS triggerName,
+				qrtz_triggers.TRIGGER_GROUP AS TriggerGroup,
+				qrtz_cron_triggers.CRON_EXPRESSION AS cronExpression,
+				qrtz_cron_triggers.TIME_ZONE_ID AS  timeZoneId
 			FROM
 				qrtz_job_details
 			JOIN qrtz_triggers

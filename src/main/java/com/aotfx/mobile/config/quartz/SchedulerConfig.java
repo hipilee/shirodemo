@@ -25,7 +25,7 @@ public class SchedulerConfig {
         SchedulerFactoryBean factory = new SchedulerFactoryBean();
         factory.setQuartzProperties(quartzProperties());
 
-        //将Job的工厂设置为自己的，重写了的工厂。解决了Job不能注入spring对象的问题。
+        //将Job工厂设置为自己的，重写了的工厂。解决了Job不能注入spring对象的问题。
         factory.setJobFactory(aotfxJobFactory);
         return factory;
     }
@@ -41,7 +41,7 @@ public class SchedulerConfig {
     }
 
     /*
-     * quartz初始化监听器
+     * quartz初始化监听器,用于启动Job
      */
     @Bean
     public QuartzInitializerListener executorListener() {

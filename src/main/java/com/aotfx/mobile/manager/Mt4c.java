@@ -1,6 +1,6 @@
 package com.aotfx.mobile.manager;
 
-import com.aotfx.mobile.beans.HistroyOrderBean;
+import com.aotfx.mobile.dao.entity.HistroyOrderBean;
 import com.aotfx.mobile.common.utils.OrderTypeEnum;
 import com.jfx.Broker;
 import com.jfx.ErrNoOrderSelected;

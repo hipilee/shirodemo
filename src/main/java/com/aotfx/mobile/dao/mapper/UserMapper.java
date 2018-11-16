@@ -1,4 +1,4 @@
-package com.aotfx.mobile.dao;
+package com.aotfx.mobile.dao.mapper;
 
 import org.springframework.stereotype.Repository;
 

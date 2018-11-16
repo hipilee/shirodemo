@@ -2,9 +2,9 @@ package com.aotfx.mobile.controller;
 
 
 import com.aotfx.mobile.dao.entity.JobAndTrigger;
-import com.aotfx.mobile.service.IJobAndTriggerService;
+import com.aotfx.mobile.service.quartz.IJobAndTriggerService;
 import com.aotfx.mobile.service.quartz.impl.BaseJob;
-import com.github.pagehelper.PageInfo;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -134,12 +134,19 @@ public class JobController
 	
 	@GetMapping(value="/queryjob")
 	public Map<String, Object> queryjob(@RequestParam(value="pageNum")Integer pageNum, @RequestParam(value="pageSize")Integer pageSize) 
-	{			
-		PageInfo<JobAndTrigger> jobAndTrigger = iJobAndTriggerService.getJobAndTriggerDetails(pageNum, pageSize);
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("JobAndTrigger", jobAndTrigger);
-		map.put("number", jobAndTrigger.getTotal());
-		return map;
+	{
+		Page<JobAndTrigger> page = new Page<>(pageNum,pageSize);
+		page.setRecords(iJobAndTriggerService.getJobAndTriggerDetails(page));
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("JobAndTrigger",page);
+        map.put("number",page.getTotal());
+        return map;
+
+//		PageInfo<JobAndTrigger> jobAndTrigger = iJobAndTriggerService.getJobAndTriggerDetails();
+//		Map<String, Object> map = new HashMap<String, Object>();
+//		map.put("JobAndTrigger", jobAndTrigger);
+//		map.put("number", jobAndTrigger.getTotal());
+//		return map;
 	}
 	
 	public static BaseJob getClass(String classname) throws Exception

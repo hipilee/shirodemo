@@ -1,7 +1,7 @@
 package com.aotfx.mobile.service.impl;
 
 
-import com.aotfx.mobile.dao.UserMapper;
+import com.aotfx.mobile.dao.mapper.UserMapper;
 import com.aotfx.mobile.service.BaseService;
 import org.apache.shiro.crypto.hash.SimpleHash;
 import org.apache.shiro.util.ByteSource;

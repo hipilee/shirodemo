@@ -2,7 +2,7 @@ package com.aotfx.mobile.controller;
 
 import com.jfx.Broker;
 import com.jfx.net.JFXServer;
-import com.aotfx.mobile.beans.HistroyOrderBean;
+import com.aotfx.mobile.dao.entity.HistroyOrderBean;
 import com.aotfx.mobile.manager.Mt4c;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;

@@ -1,18 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.aotfx.mobile.dao.nj4x.OrderMapper">
+<mapper namespace="com.aotfx.mobile.dao.mapper.ActiveOrderMapper">
 
     <insert id="insertActiveOrdersBatch" parameterType="java.util.List">
         insert into active_orders
-        (user,orderNumber,openTime,type,size,symbol,openPrice,sellLoss,takeProfit,currentPrice,comment,commission,taxes,swap,profit;)
+        (user,orderNumber,openTime,type,size,symbol,openPrice,stopLoss,takeProfit,currentPrice,comment,commission,taxes,swap,profit)
         values
         <foreach collection="list" item="order" separator=",">
-            (
-            #{order.user}, #{order.orderNumber},#{order.openTime},#{order.type},#{order.size}, #{order.openPrice},
-            #{order.sellLoss},#{order.takeProfit},#{order.currentPrice},#{order.comment},
-            #{order.commission},#{order.taxes}, #{order.swap}, #{order.profit}
-            )
+            (#{order.user},#{order.orderNumber},#{order.openTime,jdbcType=DATE},#{order.type},#{order.size},#{order.symbol},#{order.openPrice},#{order.stopLoss},#{order.takeProfit},#{order.currentPrice},#{order.comment},#{order.commission},#{order.taxes}, #{order.swap}, #{order.profit})
         </foreach>
     </insert>
 
