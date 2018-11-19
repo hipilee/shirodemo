@@ -1,4 +1,4 @@
-package com.aotfx.mobile.service.quartz.impl;
+package com.aotfx.mobile.service.quartz.job;
 
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;

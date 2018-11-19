@@ -10,12 +10,10 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName(value="mt4_accounts")
-public class Mt4User {
-    @TableId(value = "user")
-    private String user;
-    private String broker;
-    private String password;
-    private Integer status;
+@TableName(value = "user")
+public class User {
+    @TableId("telephone")
     private String telephone;
+    private String userName;
+    private String password;
 }

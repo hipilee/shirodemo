@@ -1,11 +1,10 @@
-package com.aotfx.mobile.service.quartz;
+package com.aotfx.mobile.service.quartz.job;
 
 import com.aotfx.mobile.common.utils.UUID32Util;
 import com.aotfx.mobile.dao.entity.HistroyOrderBean;
 import com.aotfx.mobile.dao.entity.Mt4User;
 import com.aotfx.mobile.manager.Mt4c;
 import com.aotfx.mobile.service.nj4x.IHistroyOrderService;
-import com.aotfx.mobile.service.quartz.impl.BaseJob;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jfx.Broker;
 import com.jfx.ErrNoOrderSelected;

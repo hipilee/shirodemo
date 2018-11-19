@@ -3,7 +3,7 @@ package com.aotfx.mobile.controller;
 
 import com.aotfx.mobile.dao.entity.JobAndTriggerVo;
 import com.aotfx.mobile.service.quartz.IJobAndTriggerService;
-import com.aotfx.mobile.service.quartz.impl.BaseJob;
+import com.aotfx.mobile.service.quartz.job.BaseJob;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.quartz.*;
 import org.slf4j.Logger;

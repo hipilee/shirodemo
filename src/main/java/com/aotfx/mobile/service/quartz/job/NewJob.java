@@ -1,10 +1,8 @@
-package com.aotfx.mobile.service.quartz;
+package com.aotfx.mobile.service.quartz.job;
 
 import java.util.Date;
 
-import com.aotfx.mobile.dao.entity.Mt4User;
 import com.aotfx.mobile.dao.mapper.Mt4UserMapper;
-import com.aotfx.mobile.service.quartz.impl.BaseJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.quartz.JobExecutionContext;

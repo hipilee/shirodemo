@@ -1,11 +1,9 @@
-package com.aotfx.mobile.service.quartz;
+package com.aotfx.mobile.service.quartz.job;
 
-import com.aotfx.mobile.common.utils.UUID32Util;
 import com.aotfx.mobile.dao.entity.ActiveOrderBean;
 import com.aotfx.mobile.dao.entity.Mt4User;
 import com.aotfx.mobile.manager.Mt4c;
 import com.aotfx.mobile.service.nj4x.impl.ActiveOrderService;
-import com.aotfx.mobile.service.quartz.impl.BaseJob;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jfx.Broker;
 import com.jfx.ErrNoOrderSelected;
@@ -41,7 +39,6 @@ public class SynActiveOrders implements BaseJob {
 
 
         Mt4c mt4c = new Mt4c("192.168.1.7", 7788, new Broker(mt4User.getBroker()), mt4User.getUser() + "@" + mt4User.getBroker()+"SynActiveOrders", mt4User.getPassword());
-
 
         try {
             mt4c.connect();

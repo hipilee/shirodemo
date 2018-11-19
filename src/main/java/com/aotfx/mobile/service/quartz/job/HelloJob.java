@@ -1,6 +1,5 @@
-package com.aotfx.mobile.service.quartz;
+package com.aotfx.mobile.service.quartz.job;
 
-import com.aotfx.mobile.service.quartz.impl.BaseJob;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
