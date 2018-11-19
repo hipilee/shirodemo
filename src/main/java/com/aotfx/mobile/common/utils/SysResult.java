@@ -1,37 +1,22 @@
 package com.aotfx.mobile.common.utils;
 
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * @Description 生成32位的UUID
+ * @auther xiutao li
+ * @email hipilee@gamil.com leexiutao@foxmail.com
+ * @create 2018-11-17 13:04
+ */
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class SysResult<T> {
     private int code;
     private String message;
     private T data;
-
-    public SysResult(int code, String message, T data) {
-        this.code = code;
-        this.message = message;
-        this.data = data;
-    }
-
-    public int getCode() {
-        return code;
-    }
-
-    public void setCode(int code) {
-        this.code = code;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public T getData() {
-        return data;
-    }
-
-    public void setData(T data) {
-        this.data = data;
-    }
 }

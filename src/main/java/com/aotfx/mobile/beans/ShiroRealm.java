@@ -9,6 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
 
+/**
+ * @Description 生成32位的UUID
+ * @auther xiutao li
+ * @email hipilee@gamil.com leexiutao@foxmail.com
+ * @create 2018-11-17 13:04
+ */
 public class ShiroRealm extends AuthenticatingRealm {
     @Autowired
     private BaseService baseService;

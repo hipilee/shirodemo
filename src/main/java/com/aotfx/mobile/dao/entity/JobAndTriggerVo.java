@@ -10,7 +10,7 @@ import java.math.BigInteger;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class JobAndTrigger {
+public class JobAndTriggerVo {
     //变量名的命名一定要严格遵守驼峰规则，切记！
     private String jobName;
     private String jobGroup;
@@ -21,6 +21,4 @@ public class JobAndTrigger {
 	private BigInteger timesTriggered;
     private String cronExpression;
     private String timeZoneId;
-
-
 }

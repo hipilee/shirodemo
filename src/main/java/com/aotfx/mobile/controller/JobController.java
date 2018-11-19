@@ -1,7 +1,7 @@
 package com.aotfx.mobile.controller;
 
 
-import com.aotfx.mobile.dao.entity.JobAndTrigger;
+import com.aotfx.mobile.dao.entity.JobAndTriggerVo;
 import com.aotfx.mobile.service.quartz.IJobAndTriggerService;
 import com.aotfx.mobile.service.quartz.impl.BaseJob;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -135,16 +135,16 @@ public class JobController
 	@GetMapping(value="/queryjob")
 	public Map<String, Object> queryjob(@RequestParam(value="pageNum")Integer pageNum, @RequestParam(value="pageSize")Integer pageSize) 
 	{
-		Page<JobAndTrigger> page = new Page<>(pageNum,pageSize);
+		Page<JobAndTriggerVo> page = new Page<>(pageNum,pageSize);
 		page.setRecords(iJobAndTriggerService.getJobAndTriggerDetails(page));
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("JobAndTrigger",page);
         map.put("number",page.getTotal());
         return map;
 
-//		PageInfo<JobAndTrigger> jobAndTrigger = iJobAndTriggerService.getJobAndTriggerDetails();
+//		PageInfo<JobAndTriggerVo> jobAndTrigger = iJobAndTriggerService.getJobAndTriggerDetails();
 //		Map<String, Object> map = new HashMap<String, Object>();
-//		map.put("JobAndTrigger", jobAndTrigger);
+//		map.put("JobAndTriggerVo", jobAndTrigger);
 //		map.put("number", jobAndTrigger.getTotal());
 //		return map;
 	}

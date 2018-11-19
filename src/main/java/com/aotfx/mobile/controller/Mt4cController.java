@@ -17,20 +17,8 @@ public class Mt4cController {
     @ResponseBody
     @RequestMapping("/histroyorders/{mt4}")
     public HistroyOrderBean[] getHistroyOrders(@PathVariable(name="mt4") int mt4){
-        Mt4c mt4c = new Mt4c("192.168.1.7", 7788, new Broker("107.154.197.81"), "80012391", "Lxtcfx8793");
-        try {
-            mt4c.connect();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        HistroyOrderBean[] tHistroyOrders =  mt4c.histroyOrders();
-        try {
-            mt4c.close(true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        JFXServer.stop();
-        return tHistroyOrders;
+
+        return null;
     }
 
 }

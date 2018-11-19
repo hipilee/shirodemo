@@ -33,52 +33,6 @@ public class Mt4c extends Strategy {
     }
 
     public void connect() throws Exception {
-        this.withHistoryPeriod(Strategy.HistoryPeriod.ALL_HISTORY).connect(termServerHost, termServerPort, mt4Server, mt4User, mt4Password);
-    }
-
-    public HistroyOrderBean[] histroyOrders() {
-        int ordersHistoryCount = ordersHistoryTotal();
-        Vector<HistroyOrderBean> vectorHisOrders = new Vector();
-
-        for (int i = 0; i < ordersHistoryCount; i++) {
-            try {
-                if (orderSelect(i, SelectionType.SELECT_BY_POS, SelectionPool.MODE_HISTORY) && orderType() < 6) {
-
-                    HistroyOrderBean hisOrder = new HistroyOrderBean();
-                    setOrderBean(hisOrder);
-                    vectorHisOrders.add(hisOrder);
-                }
-            } catch (ErrNoOrderSelected errNoOrderSelected) {
-                errNoOrderSelected.printStackTrace();
-            }
-        }
-        return vectorHisOrders.toArray(new HistroyOrderBean[vectorHisOrders.size()]);
-    }
-
-    private void setOrderBean(HistroyOrderBean histroyOrderBean) throws ErrNoOrderSelected {
-        histroyOrderBean.setOrderNumber(orderTicketNumber());
-        histroyOrderBean.setType(OrderTypeEnum.values()[orderType()].name());
-        histroyOrderBean.setOpenTime(orderOpenTime());
-        histroyOrderBean.setSize(orderLots());
-//                    private String symbol;
-        histroyOrderBean.setSymbol(orderSymbol());
-//                    private double openPrice;
-//
-        histroyOrderBean.setOpenPrice(orderOpenPrice());
-//
-////    平仓信息
-//                    private Date closeTime;
-        histroyOrderBean.setCloseTime(orderCloseTime());
-//                    private double closePrice;
-        histroyOrderBean.setClosePrice(orderClosePrice());
-//                    private double commission;
-        histroyOrderBean.setCommission(orderCommission());
-//                    private double taxes;
-
-//                    private double swap;
-        histroyOrderBean.setSwap(orderSwap());
-//                    private double profit;
-        histroyOrderBean.setProfit(orderProfit());
-//                    private String comment;
+        this.withHistoryPeriod(HistoryPeriod.LAST_3_DAYS).connect(termServerHost, termServerPort, mt4Server, mt4User, mt4Password);
     }
 }

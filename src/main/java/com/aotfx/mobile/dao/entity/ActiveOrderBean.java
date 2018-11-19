@@ -16,10 +16,6 @@ import java.util.Date;
 @TableName("active_orders")
 public class ActiveOrderBean implements Serializable {
 
-
-//    @TableId()
-    private String id;
-
     private String user;
 
     //    订单编号

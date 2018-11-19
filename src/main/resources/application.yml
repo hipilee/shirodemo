@@ -7,14 +7,18 @@ spring:
     url: jdbc:mysql://39.108.14.200:3306/aottrade?allowMultiQueries=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull
     username: root
     password: 342@fj*&A
-    driver-class-name: com.mysql.jdbc.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
 mybatis-plus:
   mapper-locations: classpath:/mapper/*Mapper.xml
   type-aliases-package: com.aotfx.mobile.dao.entity
-  executor-type: BATCH
+  config-location:
+  executor-type: simple
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+
+
 
 
 

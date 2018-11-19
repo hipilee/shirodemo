@@ -3,9 +3,12 @@ package com.aotfx.mobile.common.utils;
 import java.util.UUID;
 
 /**
- * Created by myz on 2017/7/12.
+ * @Description 生成32位的UUID
+ * @auther xiutao li
+ * @email hipilee@gamil.com leexiutao@foxmail.com
+ * @create 2018-11-17 13:04
  */
-public class UUIDUtil {
+public class UUID32Util {
 
     /**
      *获取一个UUID
@@ -32,7 +35,4 @@ public class UUIDUtil {
         return ss;
     }
 
-    public static void main(String[] args){
-        System.out.println(UUIDUtil.getOneUUID());
-    }
 }
