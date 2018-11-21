@@ -1,13 +1,9 @@
 package com.aotfx.mobile;
 
-import com.aotfx.mobile.config.datasource.MybatisPlusConfig;
-import com.aotfx.mobile.dao.entity.Mt4User;
+import com.aotfx.mobile.dao.entity.Mt4Account;
 import com.aotfx.mobile.service.nj4x.IMT4UserService;
 import com.aotfx.mobile.service.quartz.IJobAndTriggerService;
 import com.aotfx.mobile.service.quartz.UserRoleVoService;
-import com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration;
-import com.baomidou.mybatisplus.core.MybatisConfiguration;
-import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,14 +40,14 @@ public class ShirodemoApplicationTests {
 //		page1.setRecords(service1.selectUserListPage(page1));
 //		System.out.println(page1.getRecords().get(0));
 
-//        boolean saveResult = imt4UserService.saveOrUpdate(new Mt4User("3825688", "Ava-Real 5", "w3kvmbm", 1, "15708470013"));
+//        boolean saveResult = imt4UserService.saveOrUpdate(new Mt4Account("3825688", "Ava-Real 5", "w3kvmbm", 1, "15708470013"));
 //        System.out.println(saveResult);
-        Vector<Mt4User> v = new Vector<>();
-        v.add(new Mt4User("3825680", "Ava-Real 5", "w3kvmbm", 1, "15708470013"));
-        v.add(new Mt4User("3825689", "Ava-Real 5", "w3kvmbm", 1, "15708470013"));
-        v.add(new Mt4User("3825699", "Ava-Real 5", "w3kvmbm", 1, "15708470013"));
-        System.out.println(imt4UserService.saveOrUpdateBatch(v));
-//                            imt4UserService.saveOrUpdate(new Mt4User("80012391", "real5.ava-mt.com", "Lxtcfx8793", 1, "15708470013"));
+        Vector<Mt4Account> v = new Vector<>();
+//        v.add(new Mt4Account("3825680", "Ava-Real 5", "w3kvmbm", 1, "15708470013"));
+//        v.add(new Mt4Account("3825689", "Ava-Real 5", "w3kvmbm", 1, "15708470013"));
+//        v.add(new Mt4Account("3825699", "Ava-Real 5", "w3kvmbm", 1, "15708470013"));
+//        System.out.println(imt4UserService.saveOrUpdateBatch(v));
+//                            imt4UserService.saveOrUpdate(new Mt4Account("80012391", "real5.ava-mt.com", "Lxtcfx8793", 1, "15708470013"));
 
 //        System.out.println(saveResult);
     }

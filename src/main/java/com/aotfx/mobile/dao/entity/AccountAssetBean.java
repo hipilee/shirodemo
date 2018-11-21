@@ -13,17 +13,15 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @TableName("assets")
 public class AccountAssetBean {
+    private Long telephone;
     private String user;
     private BigDecimal balance;
     private BigDecimal equity;
+    private BigDecimal free;
     private BigDecimal margin;
     private BigDecimal credit;
-    private BigDecimal free;
-    private BigDecimal totalProfitLoss;
-    private BigDecimal yesterdayProfitLoss;
-    private BigDecimal todayProfitLoss;
     private BigDecimal deposit;
-    private BigDecimal withdrawl;
-
-
+    private BigDecimal withdrawal;
+    private BigDecimal profitLoss;
+    private BigDecimal yesterdayProfitLoss;
 }

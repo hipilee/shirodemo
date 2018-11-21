@@ -56,11 +56,11 @@ public class MT4ConnectionExample extends Strategy {
     static {
         System.setProperty("jfx_server_port", "7779");
         //如果程序和terminal server不在同一台电脑上，需要执行编写下面这句代码
-        System.setProperty("nj4x_server_host", "192.168.1.8");
+        System.setProperty("nj4x_server_host", "192.168.1.4");
     }
 
     public void connect() throws IOException {
-        this.withHistoryPeriod(Strategy.HistoryPeriod.ALL_HISTORY).connect("192.168.1.7", 7788, new Broker("107.154.197.81"), "80012391", "Lxtcfx8793");
+        this.withHistoryPeriod(Strategy.HistoryPeriod.ALL_HISTORY).connect("192.168.1.6", 7788, new Broker("107.154.197.81"), "80012391", "Lxtcfx8793");
         // this.withHistoryPeriod(Strategy.HistoryPeriod.ALL_HISTORY).connect("192.168.1.4", 7788,  new Broker("162.13.94.164") ,"77011583", "Ava12345");
         //this.withHistoryPeriod(Strategy.HistoryPeriod.ALL_HISTORY).connect("192.168.1.4", 7788,  new Broker("mt4d01.fxcorporate.com") ,"3817104", "Ava12345");
 

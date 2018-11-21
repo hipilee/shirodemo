@@ -11,11 +11,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @TableName(value="mt4_accounts")
-public class Mt4User {
-    @TableId(value = "user")
+public class Mt4Account {
+    private Long telephone;
     private String user;
     private String broker;
     private String password;
     private Integer status;
-    private String telephone;
+
 }

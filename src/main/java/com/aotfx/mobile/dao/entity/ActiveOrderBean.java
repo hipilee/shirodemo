@@ -16,6 +16,7 @@ import java.util.Date;
 @TableName("active_orders")
 public class ActiveOrderBean implements Serializable {
 
+    private Long telephone;
     private String user;
 
     //    订单编号
