@@ -139,11 +139,19 @@ public class SynHistoryOrdersAndAccountAsset implements BaseJob {
             }
         }
 //       Compute the total profit.
-        totalProfit = allOrdersProfit.subtract(balanceOrdersProfit).setScale(2,ROUND_HALF_UP);
+        totalProfit = allOrdersProfit.subtract(balanceOrdersProfit).setScale(2, ROUND_HALF_UP);
 
-        accountAssetBean = new AccountAssetBean(mt4Account.getTelephone(), mt4Account.getUser(), new BigDecimal(mt4c.accountBalance()).setScale(2,ROUND_HALF_UP ), new BigDecimal(mt4c.accountEquity()).setScale(2,ROUND_HALF_UP ),
-                new BigDecimal(mt4c.accountFreeMargin()).setScale(2,ROUND_HALF_UP ), new BigDecimal(mt4c.accountMargin()).setScale(2,ROUND_HALF_UP ), new BigDecimal(mt4c.accountCredit()).setScale(2,ROUND_HALF_UP ), deposit.setScale(2,ROUND_HALF_UP), withdrawal.setScale(2,ROUND_HALF_UP), totalProfit.setScale(2,ROUND_HALF_UP), yesterdayProfit.setScale(2,ROUND_HALF_UP));
-        databaseCRUD(null,accountAssetBean);
+        accountAssetBean = new AccountAssetBean.Builder(mt4Account.getTelephone(), mt4Account.getUser()).
+                balance(new BigDecimal(mt4c.accountBalance()).setScale(2, ROUND_HALF_UP)).
+                credit(new BigDecimal(mt4c.accountCredit()).setScale(2, ROUND_HALF_UP)).
+                deposit(new BigDecimal(mt4c.accountBalance()).setScale(2, ROUND_HALF_UP)).
+                equity(new BigDecimal(mt4c.accountEquity()).setScale(2, ROUND_HALF_UP)).
+                free(new BigDecimal(mt4c.accountFreeMargin()).setScale(2, ROUND_HALF_UP)).
+                margin(new BigDecimal(mt4c.accountMargin()).setScale(2, ROUND_HALF_UP)).
+                profitLoss( totalProfit.setScale(2, ROUND_HALF_UP)).
+                yesterdayProfitLoss( yesterdayProfit.setScale(2, ROUND_HALF_UP)).
+                withdrawal( withdrawal.setScale(2, ROUND_HALF_UP)).build();
+        databaseCRUD(null, accountAssetBean);
     }
 
     private void databaseCRUD(Vector<HistoryOrderBean> histroyOrderBeanVector, AccountAssetBean accountAssetBean) {
