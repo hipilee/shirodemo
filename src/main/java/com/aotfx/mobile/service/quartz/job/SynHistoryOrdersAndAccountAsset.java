@@ -24,6 +24,8 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Vector;
 
+import static java.math.BigDecimal.ROUND_HALF_UP;
+
 /**
  * @Description
  * @auther xiutao li
@@ -78,10 +80,14 @@ public class SynHistoryOrdersAndAccountAsset implements BaseJob {
     }
 
     private void assembleHistoryOrders(Mt4Account mt4Account, Mt4c mt4c, Vector<HistoryOrderBean> historyOrderBeanVector, AccountAssetBean accountAssetBean) throws ErrNoOrderSelected {
-        String user = mt4c.getMt4User().substring(0, mt4c.getMt4User().indexOf("@"));
         int ordersCount = mt4c.ordersHistoryTotal();
 
-        BigDecimal totalProfit,yesterdayProfit = new BigDecimal(0.0),deposit = new BigDecimal(0.0),withdrawal = new BigDecimal(0.0),allOrdersProfit = new BigDecimal(0.0),balanceOrdersProfit = new BigDecimal(0.0);
+        BigDecimal totalProfit;
+        BigDecimal yesterdayProfit = new BigDecimal(0.0).setScale(2);
+        BigDecimal deposit = new BigDecimal(0.0).setScale(2);
+        BigDecimal withdrawal = new BigDecimal(0.0).setScale(2);
+        BigDecimal allOrdersProfit = new BigDecimal(0.0).setScale(2);
+        BigDecimal balanceOrdersProfit = new BigDecimal(0.0).setScale(2);
 
         QueryWrapper<HistoryOrderBean> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("telephone", mt4Account.getTelephone()).eq("user", mt4Account.getUser()).orderByDesc("close_time").last("limit 1");
@@ -133,26 +139,27 @@ public class SynHistoryOrdersAndAccountAsset implements BaseJob {
             }
         }
 //       Compute the total profit.
-        totalProfit = allOrdersProfit.subtract(balanceOrdersProfit);
+        totalProfit = allOrdersProfit.subtract(balanceOrdersProfit).setScale(2,ROUND_HALF_UP);
 
-        accountAssetBean = new AccountAssetBean(mt4Account.getTelephone(), mt4Account.getUser(), new BigDecimal(mt4c.accountBalance()), new BigDecimal(mt4c.accountEquity()),
-                new BigDecimal(mt4c.accountFreeMargin()), new BigDecimal(mt4c.accountMargin()), new BigDecimal(mt4c.accountCredit()), deposit, withdrawal, totalProfit, yesterdayProfit);
+        accountAssetBean = new AccountAssetBean(mt4Account.getTelephone(), mt4Account.getUser(), new BigDecimal(mt4c.accountBalance()).setScale(2,ROUND_HALF_UP ), new BigDecimal(mt4c.accountEquity()).setScale(2,ROUND_HALF_UP ),
+                new BigDecimal(mt4c.accountFreeMargin()).setScale(2,ROUND_HALF_UP ), new BigDecimal(mt4c.accountMargin()).setScale(2,ROUND_HALF_UP ), new BigDecimal(mt4c.accountCredit()).setScale(2,ROUND_HALF_UP ), deposit.setScale(2,ROUND_HALF_UP), withdrawal.setScale(2,ROUND_HALF_UP), totalProfit.setScale(2,ROUND_HALF_UP), yesterdayProfit.setScale(2,ROUND_HALF_UP));
+        databaseCRUD(null,accountAssetBean);
     }
 
     private void databaseCRUD(Vector<HistoryOrderBean> histroyOrderBeanVector, AccountAssetBean accountAssetBean) {
-        for (HistoryOrderBean hisOrder :
-                histroyOrderBeanVector) {
-            //判断该订单是否在历史里面已经存在，我们现在每一次获取的历史订单是前三天的；所以现在获取的历史订单有可能已经在历史订单中了。
+        iAccountAssetService.update(accountAssetBean, new QueryWrapper<AccountAssetBean>().eq("telephone", accountAssetBean.getTelephone()).eq("user", accountAssetBean.getUser()));
 
-
-            iAccountAssetService.update(accountAssetBean, new QueryWrapper<AccountAssetBean>().eq("telephone", accountAssetBean.getTelephone()).eq("user", accountAssetBean.getUser()));
-            //构建判断逻辑
-            QueryWrapper<HistoryOrderBean> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("user", hisOrder.getUser()).eq("order_number", hisOrder.getOrderNumber());
-            if (iHistoryOrderService.count(queryWrapper) < 1) {
-                iHistoryOrderService.save(hisOrder);
-            }
-        }
+//        for (HistoryOrderBean hisOrder :
+//                histroyOrderBeanVector) {
+//
+//
+//            //构建判断逻辑
+//            QueryWrapper<HistoryOrderBean> queryWrapper = new QueryWrapper<>();
+//            queryWrapper.eq("user", hisOrder.getUser()).eq("order_number", hisOrder.getOrderNumber());
+//            if (iHistoryOrderService.count(queryWrapper) < 1) {
+//                iHistoryOrderService.save(hisOrder);
+//            }
+//        }
     }
 
     public static void main(String[] args) {
