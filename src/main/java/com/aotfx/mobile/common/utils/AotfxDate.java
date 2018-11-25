@@ -13,39 +13,55 @@ public class AotfxDate {
     /**
      * date2比date1多的天数
      *
-     * @param date1
-     * @param date2
+     * @param date
+     * @param anotherDate
      * @return
      */
-    public static int differentDays(Date date1, Date date2) {
-        Calendar cal1 = Calendar.getInstance();
-        cal1.setTime(date1);
+    public static int differentDays(Date date, Date anotherDate) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
 
-        Calendar cal2 = Calendar.getInstance();
-        cal2.setTime(date2);
-        int day1 = cal1.get(Calendar.DAY_OF_YEAR);
-        int day2 = cal2.get(Calendar.DAY_OF_YEAR);
+        Calendar anotherCalendar = Calendar.getInstance();
+        anotherCalendar.setTime(anotherDate);
+        int day = calendar.get(Calendar.DAY_OF_YEAR);
+        int anotherDay = anotherCalendar.get(Calendar.DAY_OF_YEAR);
 
-        int year1 = cal1.get(Calendar.YEAR);
-        int year2 = cal2.get(Calendar.YEAR);
-        if (year1 != year2)   //different year
+        int year = calendar.get(Calendar.YEAR);
+        int anotherYear = anotherCalendar.get(Calendar.YEAR);
+        if (year != anotherYear)   //Different year
         {
-            int timeDistance = 0;
-            for (int i = year1; i < year2; i++) {
-                if (i % 4 == 0 && i % 100 != 0 || i % 400 == 0)    //闰年 leap year
+            int dayDistance = 0;
+            for (int i = year; i < anotherYear; i++) {
+                if (i % 4 == 0 && i % 100 != 0 || i % 400 == 0)    //Leap year
                 {
-                    timeDistance += 366;
-                } else    //不是闰年
+                    dayDistance += 366;
+                } else    //Not leap year
                 {
-                    timeDistance += 365;
+                    dayDistance += 365;
                 }
             }
 
-            return timeDistance + (day2 - day1);
-        } else    //the same year
+            return dayDistance + (anotherDay - day);
+        } else    //Same year
         {
-            System.out.println("判断day2 - day1 : " + (day2 - day1));
-            return day2 - day1;
+            return anotherDay - day;
         }
+    }
+
+
+    /**
+     * 获取当前日期是星期几<br>
+     *
+     * @param date
+     * @return {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
+     */
+    public static String dayOfWeek(Date date) {
+        String[] weekDays = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        int w = cal.get(Calendar.DAY_OF_WEEK) - 1;
+        if (w < 0)
+            w = 0;
+        return weekDays[w];
     }
 }

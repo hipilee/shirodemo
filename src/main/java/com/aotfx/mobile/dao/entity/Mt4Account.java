@@ -17,5 +17,6 @@ public class Mt4Account {
     private String broker;
     private String password;
     private Integer status;
+    private Integer timeZoneOffset;
 
 }

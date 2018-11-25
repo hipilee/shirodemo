@@ -1,7 +1,8 @@
 package com.aotfx.mobile;
 
+import com.aotfx.mobile.config.nj4x.Nj4xConfig;
 import com.aotfx.mobile.dao.entity.Mt4Account;
-import com.aotfx.mobile.service.nj4x.IMT4UserService;
+import com.aotfx.mobile.service.nj4x.IMT4AccountService;
 import com.aotfx.mobile.service.quartz.IJobAndTriggerService;
 import com.aotfx.mobile.service.quartz.UserRoleVoService;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -26,7 +27,10 @@ public class ShirodemoApplicationTests {
     private UserRoleVoService userRoleVoService;
 
     @Autowired
-    private IMT4UserService imt4UserService;
+    private IMT4AccountService imt4UserService;
+
+    @Autowired
+    Nj4xConfig nj4xConfig;
 
     @Test
     public void contextLoads() {
@@ -50,6 +54,8 @@ public class ShirodemoApplicationTests {
 //                            imt4UserService.saveOrUpdate(new Mt4Account("80012391", "real5.ava-mt.com", "Lxtcfx8793", 1, "15708470013"));
 
 //        System.out.println(saveResult);
+
+
     }
 
 }

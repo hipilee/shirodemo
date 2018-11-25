@@ -1,15 +1,16 @@
 package com.aotfx.mobile.service.quartz.job;
 
+import com.aotfx.mobile.config.nj4x.Nj4xConfig;
 import com.aotfx.mobile.dao.entity.ActiveOrderBean;
 import com.aotfx.mobile.dao.entity.Mt4Account;
 import com.aotfx.mobile.manager.Mt4c;
-import com.aotfx.mobile.service.nj4x.impl.ActiveOrderService;
+import com.aotfx.mobile.service.nj4x.IActiveOrderService;
+import com.aotfx.mobile.service.nj4x.IMT4AccountService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jfx.Broker;
 import com.jfx.ErrNoOrderSelected;
 import com.jfx.SelectionPool;
 import com.jfx.SelectionType;
-import com.jfx.net.JFXServer;
 import com.jfx.strategy.Strategy;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
@@ -18,8 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-
-import java.io.IOException;
+import java.util.List;
 import java.util.Vector;
 
 @DisallowConcurrentExecution
@@ -27,39 +27,66 @@ public class SynActiveOrders implements BaseJob {
     private static Logger _log = LoggerFactory.getLogger(SynActiveOrders.class);
 
     @Autowired
-    private ActiveOrderService activeOrderService;
+    private IActiveOrderService iActiveOrderService;
+
+    @Autowired
+    private IMT4AccountService imt4AccountService;
+
+    @Autowired
+    private Nj4xConfig nj4xConfig;
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         _log.error("同步持仓订单");
 
-        Mt4Account mt4User = new Mt4Account(15708470013L, "80012391", "Ava-Real 5", "Lxtcfx8793", 1);
-//        Mt4Account mt4User = new Mt4Account(15708470013L, "3815241", "204.8.241.79", "ur4bzys", 1);
-        //Get MT4 accounts cycle.
-        for (int i = 0; i < 10; i++) {
+
+        Long startTime = System.currentTimeMillis();
+
+        QueryWrapper<Mt4Account> queryWrapper = new QueryWrapper<Mt4Account>().select("telephone", "user", "broker", "password", "status");
+        List<Mt4Account> mt4AccountList = imt4AccountService.list(queryWrapper);
+
+        //循环获取mt4账户和密码
+        for (Mt4Account mt4Account :
+                mt4AccountList) {
+
+            Mt4c mt4c = new Mt4c(nj4xConfig, new Broker(mt4Account.getBroker()), mt4Account.getUser() + "@" + mt4Account.getBroker() + "SynActiveOrders", mt4Account.getPassword());
+
+            int connectionTimes = 0;
+            int maxTimes = 4;
+            boolean retry = false;
+
+            //最多可以两次
+            do {
+                connectionTimes++;
+                try {
+                    try {
+                        if (retry) {
+                            System.out.println(mt4Account.getUser() + "@" + mt4Account.getBroker() + "第" + (connectionTimes - 1) + "次重连");
+                        }
+                        mt4c.connect(Strategy.HistoryPeriod.ALL_HISTORY);
+
+                        // hide from market watch to minimize traffic/CPU usage
+                        for (String s : mt4c.getSymbols()) {
+                            mt4c.symbolSelect(s, false);
+                        }
+                        Vector<ActiveOrderBean> activeOrderBeanVector = new Vector<>();
+
+                        activeOrderBeanVector = assembleActiveOrders(mt4Account, mt4c, activeOrderBeanVector);
+                        databaseCRUD(activeOrderBeanVector, mt4Account);
+                    } finally {
+                        mt4c.close(true);
+                    }
+                } catch (Exception e) {
+                    //如果连接过程报错，则尝试重新连接
+                    retry = true;
+                    e.printStackTrace();
+                }
+            } while (retry && (connectionTimes < maxTimes));
+
 
         }
-
-
-        Mt4c mt4c = new Mt4c("192.168.1.6", 7788, new Broker(mt4User.getBroker()), mt4User.getUser() + "@" + mt4User.getBroker() + "SynActiveOrders", mt4User.getPassword());
-
-
-        try {
-            try {
-                mt4c.connect(Strategy.HistoryPeriod.ALL_HISTORY);
-
-                Vector<ActiveOrderBean> activeOrderBeanVector = new Vector<>();
-
-                activeOrderBeanVector = assembleActiveOrders(mt4User, mt4c, activeOrderBeanVector);
-                databaseCRUD(activeOrderBeanVector, mt4User);
-            } finally {
-                mt4c.close(true);
-                JFXServer.stop();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+        Long endTime = System.currentTimeMillis();
+        _log.error("同步持仓订单耗时：" + (endTime - startTime) / 1000 + " sec");
 
     }
 
@@ -95,10 +122,10 @@ public class SynActiveOrders implements BaseJob {
         //delete all orders of the current account according to the columns telephone and user.
         QueryWrapper<ActiveOrderBean> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user", mt4User.getUser()).eq("telephone", mt4User.getTelephone());
-        activeOrderService.remove(queryWrapper);
+        iActiveOrderService.remove(queryWrapper);
 
         //insert all orders of active orders into database by batch method.
-        activeOrderService.saveBatch(activeOrderBeanVector);
+        iActiveOrderService.saveBatch(activeOrderBeanVector);
 
     }
 

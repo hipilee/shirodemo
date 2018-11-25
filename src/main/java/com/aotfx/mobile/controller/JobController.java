@@ -141,12 +141,6 @@ public class JobController
         map.put("JobAndTrigger",page);
         map.put("number",page.getTotal());
         return map;
-
-//		PageInfo<JobAndTriggerVo> jobAndTrigger = iJobAndTriggerService.getJobAndTriggerDetails();
-//		Map<String, Object> map = new HashMap<String, Object>();
-//		map.put("JobAndTriggerVo", jobAndTrigger);
-//		map.put("number", jobAndTrigger.getTotal());
-//		return map;
 	}
 	
 	public static BaseJob getClass(String classname) throws Exception

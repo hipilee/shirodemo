@@ -1,6 +1,7 @@
 package com.aotfx.mobile.dao.entity;
 
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,16 +14,37 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @TableName("assets")
 public class AccountAssetBean implements Cloneable {
+    @TableField(value = "telephone")
     private Long telephone;
+
+    @TableField(value = "user")
     private String user;
+
+    @TableField(value = "balance")
     private BigDecimal balance;
+
+    @TableField(value = "equity")
     private BigDecimal equity;
+
+    @TableField(value = "free")
     private BigDecimal free;
+
+    @TableField(value = "margin")
     private BigDecimal margin;
+
+    @TableField(value = "credit")
     private BigDecimal credit;
+
+    @TableField(value = "deposit")
     private BigDecimal deposit;
+
+    @TableField(value = "withdrawal")
     private BigDecimal withdrawal;
+
+    @TableField(value = "profit_loss")
     private BigDecimal profitLoss;
+
+    @TableField(value = "yesterday_profit_loss")
     private BigDecimal yesterdayProfitLoss;
 
     public static class Builder {
@@ -46,37 +68,37 @@ public class AccountAssetBean implements Cloneable {
         }
 
         public Builder free(BigDecimal free) {
-            accountAssetBean.setBalance(free);
+            accountAssetBean.setFree(free);
             return this;
         }
 
         public Builder margin(BigDecimal margin) {
-            accountAssetBean.setEquity(margin);
+            accountAssetBean.setMargin(margin);
             return this;
         }
 
         public Builder credit(BigDecimal credit) {
-            accountAssetBean.setBalance(credit);
+            accountAssetBean.setCredit(credit);
             return this;
         }
 
         public Builder deposit(BigDecimal deposit) {
-            accountAssetBean.setEquity(deposit);
+            accountAssetBean.setDeposit(deposit);
             return this;
         }
 
         public Builder withdrawal(BigDecimal withdrawal) {
-            accountAssetBean.setEquity(withdrawal);
+            accountAssetBean.setWithdrawal(withdrawal);
             return this;
         }
 
         public Builder profitLoss(BigDecimal profitLoss) {
-            accountAssetBean.setBalance(profitLoss);
+            accountAssetBean.setProfitLoss(profitLoss);
             return this;
         }
 
         public Builder yesterdayProfitLoss(BigDecimal yesterdayProfitLoss) {
-            accountAssetBean.setEquity(yesterdayProfitLoss);
+            accountAssetBean.setYesterdayProfitLoss(yesterdayProfitLoss);
             return this;
         }
 

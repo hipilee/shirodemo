@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping("/api")
 public class Mt4cController {
     @ResponseBody
-    @RequestMapping("/histroyorders/{mt4}")
+    @RequestMapping("/historyorders/{mt4}")
     public HistoryOrderBean[] getHistroyOrders(@PathVariable(name="mt4") int mt4){
 
         return null;

@@ -10,5 +10,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @create 2018-11-17 13:14
  */
 
-public interface IMT4UserService extends IService<Mt4Account> {
+public interface IMT4AccountService extends IService<Mt4Account> {
 }

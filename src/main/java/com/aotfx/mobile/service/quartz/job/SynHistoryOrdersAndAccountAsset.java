@@ -1,17 +1,17 @@
 package com.aotfx.mobile.service.quartz.job;
 
 import com.aotfx.mobile.common.utils.AotfxDate;
+import com.aotfx.mobile.config.nj4x.Nj4xConfig;
 import com.aotfx.mobile.dao.entity.AccountAssetBean;
 import com.aotfx.mobile.dao.entity.HistoryOrderBean;
 import com.aotfx.mobile.dao.entity.Mt4Account;
 import com.aotfx.mobile.manager.Mt4c;
 import com.aotfx.mobile.service.nj4x.IAccountAssetService;
 import com.aotfx.mobile.service.nj4x.IHistoryOrderService;
+import com.aotfx.mobile.service.nj4x.IMT4AccountService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.jfx.Broker;
-import com.jfx.ErrNoOrderSelected;
-import com.jfx.SelectionPool;
-import com.jfx.SelectionType;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.jfx.*;
 import com.jfx.strategy.Strategy;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
@@ -21,7 +21,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Vector;
 
 import static java.math.BigDecimal.ROUND_HALF_UP;
@@ -42,57 +45,85 @@ public class SynHistoryOrdersAndAccountAsset implements BaseJob {
     @Autowired
     IAccountAssetService iAccountAssetService;
 
+    @Autowired
+    private IMT4AccountService imt4AccountService;
+
+    @Autowired
+    private Nj4xConfig nj4xConfig;
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         _log.error("同步历史订单以及基本资产数据");
 
-        Mt4Account mt4User = new Mt4Account(15708470013L, "80012391", "Ava-Real 5", "Lxtcfx8793", 1);
-//        Mt4Account mt4User = new Mt4Account(15708470013L, "3815241", "FXCM-USDDemo01", "ur4bzys", 1);
-
+        Long startTime = System.currentTimeMillis();
+        QueryWrapper<Mt4Account> queryWrapper = new QueryWrapper<Mt4Account>().select("telephone", "user", "broker", "password", "status","time_zone_offset");
+        List<Mt4Account> mt4AccountList = imt4AccountService.list(queryWrapper);
         //循环获取mt4账户和密码
-        for (int i = 0; i < 10; i++) {
+        for (Mt4Account mt4Account :
+                mt4AccountList) {
 
+            synData(mt4Account);
         }
+        Long endTime = System.currentTimeMillis();
+        _log.error("同步历史订单和资产数据耗时：" + (endTime - startTime) / 1000 + " sec");
+    }
+
+    private void synData(Mt4Account mt4Account) {
+        Mt4c mt4c = new Mt4c(nj4xConfig, new Broker(mt4Account.getBroker()), mt4Account.getUser() + "@" + mt4Account.getBroker() + "SynHistoryOrdersAndAccountAsset", mt4Account.getPassword());
 
 
-        Mt4c mt4c = new Mt4c("192.168.1.6", 7788, new Broker(mt4User.getBroker()), mt4User.getUser() + "@" + mt4User.getBroker() + "SynHistoryOrdersAndAccountAsset", mt4User.getPassword());
+        int connectionTimes = 0;
+        int maxTimes = 4;
+        boolean retry = false;
 
-
-        try {
+        //最多maxTimes
+        do {
+            connectionTimes++;
             try {
-                mt4c.connect(Strategy.HistoryPeriod.ALL_HISTORY);
+                try {
+                    if (retry) {
+                        System.out.println(mt4Account.getUser() + "@" + mt4Account.getBroker() + "第" + (connectionTimes - 1) + "次重连");
+                    }
+                    mt4c.connect(Strategy.HistoryPeriod.ALL_HISTORY);
+                    //构建准备写入数据库的数据
+                    AccountAssetBean accountAssetBean;
+                    Vector<HistoryOrderBean> historyOrderBeanVector = new Vector<>();
+                    accountAssetBean = assembleData(mt4Account, mt4c, historyOrderBeanVector);
 
-                AccountAssetBean accountAssetBean = new AccountAssetBean();
-                Vector<HistoryOrderBean> historyOrderBeanVector = new Vector<>();
-                assembleHistoryOrders(mt4User, mt4c, historyOrderBeanVector, accountAssetBean);
-
-                //databaseCRUD(historyOrderBeanVector, accountAssetBean);
-            } finally {
-                mt4c.close(true);
-
+                    //将数据写入数据库
+                    databaseCRUD(historyOrderBeanVector, accountAssetBean);
+                } finally {
+                    mt4c.disconnect();
+                    mt4c.close(true);
+                }
+            } catch (Exception e) {
+                //如果连接过程报错，则尝试重新连接一次
+                retry = true;
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } while (retry && (connectionTimes < maxTimes));
 
 
     }
 
-    private void assembleHistoryOrders(Mt4Account mt4Account, Mt4c mt4c, Vector<HistoryOrderBean> historyOrderBeanVector, AccountAssetBean accountAssetBean) throws ErrNoOrderSelected {
+    private AccountAssetBean assembleData(Mt4Account mt4Account, Mt4c mt4c, Vector<HistoryOrderBean> historyOrderBeanVector) throws ErrNoOrderSelected {
         int ordersCount = mt4c.ordersHistoryTotal();
 
         BigDecimal totalProfit;
-        BigDecimal yesterdayProfit = new BigDecimal(0.0).setScale(2);
-        BigDecimal deposit = new BigDecimal(0.0).setScale(2);
-        BigDecimal withdrawal = new BigDecimal(0.0).setScale(2);
-        BigDecimal allOrdersProfit = new BigDecimal(0.0).setScale(2);
-        BigDecimal balanceOrdersProfit = new BigDecimal(0.0).setScale(2);
+        BigDecimal yesterdayProfit = new BigDecimal("0.0");
+        BigDecimal deposit = new BigDecimal("0.0");
+        BigDecimal withdrawal = new BigDecimal("0.0");
+        BigDecimal allOrdersProfit = new BigDecimal("0.0");
+        BigDecimal balanceOrdersProfit = new BigDecimal("0.0");
 
+        //取得最后平仓的历史持仓里面的订单
         QueryWrapper<HistoryOrderBean> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("telephone", mt4Account.getTelephone()).eq("user", mt4Account.getUser()).orderByDesc("close_time").last("limit 1");
         HistoryOrderBean historyOrderBean = iHistoryOrderService.getOne(queryWrapper);
 
+//
+
+        //获取平仓时间最晚的日期
         Date recentDate = null;
         if (historyOrderBean != null) {
             System.out.println(historyOrderBean.getCloseTime());
@@ -101,29 +132,29 @@ public class SynHistoryOrdersAndAccountAsset implements BaseJob {
 
         for (int i = 0; i < ordersCount; i++) {
             if (mt4c.orderSelect(i, SelectionType.SELECT_BY_POS, SelectionPool.MODE_HISTORY)) {
-//                whether to be added into history orders
+                //whether to be added into history orders
                 if (recentDate == null) {
-                    historyOrderBeanVector.add(new HistoryOrderBean(mt4Account.getTelephone(), mt4Account.getUser(), mt4c.orderTicketNumber(), mt4c.orderOpenTime(), mt4c.orderType(),
-                            mt4c.orderLots(), mt4c.orderSymbol(), new BigDecimal(mt4c.orderOpenPrice()), new BigDecimal(mt4c.orderStopLoss()), new BigDecimal(mt4c.orderTakeProfit()),
-                            mt4c.orderCloseTime(), new BigDecimal(mt4c.orderClosePrice()), new BigDecimal(mt4c.orderCommission()), new BigDecimal(0.0), new BigDecimal(mt4c.orderSwap()), new BigDecimal(mt4c.orderProfit()),
-                            mt4c.orderComment()));
-                } else if (mt4c.orderCloseTime().compareTo(recentDate) == 0 && historyOrderBean.getOrderNumber() != mt4c.orderTicketNumber()) {
-                    historyOrderBeanVector.add(new HistoryOrderBean(mt4Account.getTelephone(), mt4Account.getUser(), mt4c.orderTicketNumber(), mt4c.orderOpenTime(), mt4c.orderType(),
-                            mt4c.orderLots(), mt4c.orderSymbol(), new BigDecimal(mt4c.orderOpenPrice()), new BigDecimal(mt4c.orderStopLoss()), new BigDecimal(mt4c.orderTakeProfit()),
-                            mt4c.orderCloseTime(), new BigDecimal(mt4c.orderClosePrice()), new BigDecimal(mt4c.orderCommission()), new BigDecimal(0.0), new BigDecimal(mt4c.orderSwap()), new BigDecimal(mt4c.orderProfit()),
-                            mt4c.orderComment()));
+                    //历史持仓为空
+                    historyOrderBeanVector.add(construct(mt4Account, mt4c));
                 } else if (mt4c.orderCloseTime().compareTo(recentDate) > 0) {
-                    historyOrderBeanVector.add(new HistoryOrderBean(mt4Account.getTelephone(), mt4Account.getUser(), mt4c.orderTicketNumber(), mt4c.orderOpenTime(), mt4c.orderType(),
-                            mt4c.orderLots(), mt4c.orderSymbol(), new BigDecimal(mt4c.orderOpenPrice()), new BigDecimal(mt4c.orderStopLoss()), new BigDecimal(mt4c.orderTakeProfit()),
-                            mt4c.orderCloseTime(), new BigDecimal(mt4c.orderClosePrice()), new BigDecimal(mt4c.orderCommission()), new BigDecimal(0.0), new BigDecimal(mt4c.orderSwap()), new BigDecimal(mt4c.orderProfit()),
-                            mt4c.orderComment()));
+                    historyOrderBeanVector.add(construct(mt4Account, mt4c));
                 }
 
+                /* 此处的收益订单的收益和的计算，一定不要忘记计算手续费和隔夜利息。因为不同的做市商对隔夜利息和手续费在订单的显示不一样。
+                 * 比如说爱华的隔夜利息是和对应订单显示在一起的作为swap参数显示，而福汇则是单独作为一条balance订单显示*/
                 allOrdersProfit = allOrdersProfit.add(new BigDecimal(mt4c.orderProfit())).add(new BigDecimal(mt4c.orderCommission())).add(new BigDecimal(mt4c.orderSwap()));
-//                whether it is balance
+
+                /* 订单类型值大于5的都是balance订单。
+                OP_BUY,
+                OP_SELL ,
+                OP_BUYLIMIT ,
+                OP_BUYSTOP ,
+                OP_SELLLIMIT ,
+                OP_SELLSTOP
+                */
                 if (mt4c.orderType() > 5) {
-                    balanceOrdersProfit = balanceOrdersProfit.add(new BigDecimal(mt4c.orderProfit()));
-//                    compute the deposit and withdrawal
+                    balanceOrdersProfit = balanceOrdersProfit.add(new BigDecimal(mt4c.orderProfit())).add(new BigDecimal(mt4c.orderCommission())).add(new BigDecimal(mt4c.orderSwap()));
+                    //计算存款和出金
                     if (mt4c.orderProfit() > 0.0) {
                         deposit = deposit.add(new BigDecimal(mt4c.orderProfit()));
                     } else {
@@ -131,111 +162,66 @@ public class SynHistoryOrdersAndAccountAsset implements BaseJob {
                     }
                 }
 
-//                yesterday profit
-                Date currentDate = mt4c.timeCurrent();
-                if (AotfxDate.differentDays(currentDate, mt4c.orderCloseTime()) == -1) {
-                    yesterdayProfit = yesterdayProfit.add(new BigDecimal(mt4c.orderProfit()));
+                // 昨日收益
+                //计算出mt4服务器的时间，由于周六周天服务器不更新服务器时间，所以在这种情况下需要自己手动计算服务器时间。
+                int offset=mt4Account.getTimeZoneOffset();
+
+
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(new Date());
+                cal.add(Calendar.HOUR, -8+offset);// 24小时制
+                Date mt4Date = cal.getTime();
+
+
+
+                //昨日收益
+                if (AotfxDate.differentDays(mt4Date, mt4c.orderCloseTime()) == -1) {
+                    yesterdayProfit = yesterdayProfit.add(new BigDecimal(mt4c.orderProfit())).add(new BigDecimal(mt4c.orderCommission())).add(new BigDecimal(mt4c.orderSwap()));
                 }
             }
         }
-//       Compute the total profit.
+        //计算总收益
         totalProfit = allOrdersProfit.subtract(balanceOrdersProfit).setScale(2, ROUND_HALF_UP);
 
-        accountAssetBean = new AccountAssetBean.Builder(mt4Account.getTelephone(), mt4Account.getUser()).
+
+        AccountAssetBean accountAssetBean = new AccountAssetBean.Builder(mt4Account.getTelephone(), mt4Account.getUser()).
                 balance(new BigDecimal(mt4c.accountBalance()).setScale(2, ROUND_HALF_UP)).
                 credit(new BigDecimal(mt4c.accountCredit()).setScale(2, ROUND_HALF_UP)).
-                deposit(new BigDecimal(mt4c.accountBalance()).setScale(2, ROUND_HALF_UP)).
+                deposit(deposit.setScale(2, ROUND_HALF_UP)).
                 equity(new BigDecimal(mt4c.accountEquity()).setScale(2, ROUND_HALF_UP)).
                 free(new BigDecimal(mt4c.accountFreeMargin()).setScale(2, ROUND_HALF_UP)).
                 margin(new BigDecimal(mt4c.accountMargin()).setScale(2, ROUND_HALF_UP)).
-                profitLoss( totalProfit.setScale(2, ROUND_HALF_UP)).
-                yesterdayProfitLoss( yesterdayProfit.setScale(2, ROUND_HALF_UP)).
-                withdrawal( withdrawal.setScale(2, ROUND_HALF_UP)).build();
-        databaseCRUD(null, accountAssetBean);
+                profitLoss(totalProfit.setScale(2, ROUND_HALF_UP)).
+                yesterdayProfitLoss(yesterdayProfit.setScale(2, ROUND_HALF_UP)).
+                withdrawal(withdrawal.setScale(2, ROUND_HALF_UP)).build();
+
+        return accountAssetBean;
     }
 
     private void databaseCRUD(Vector<HistoryOrderBean> histroyOrderBeanVector, AccountAssetBean accountAssetBean) {
-        iAccountAssetService.update(accountAssetBean, new QueryWrapper<AccountAssetBean>().eq("telephone", accountAssetBean.getTelephone()).eq("user", accountAssetBean.getUser()));
 
-//        for (HistoryOrderBean hisOrder :
-//                histroyOrderBeanVector) {
-//
-//
-//            //构建判断逻辑
-//            QueryWrapper<HistoryOrderBean> queryWrapper = new QueryWrapper<>();
-//            queryWrapper.eq("user", hisOrder.getUser()).eq("order_number", hisOrder.getOrderNumber());
-//            if (iHistoryOrderService.count(queryWrapper) < 1) {
-//                iHistoryOrderService.save(hisOrder);
-//            }
-//        }
+        //更新账户的资产数据
+        QueryWrapper<AccountAssetBean> queryWrapper = new QueryWrapper<AccountAssetBean>().eq("telephone", accountAssetBean.getTelephone()).eq("user", accountAssetBean.getUser());
+        iAccountAssetService.update(accountAssetBean, queryWrapper);
+
+        //批量更新历史持仓订单信息
+        iHistoryOrderService.saveBatch(histroyOrderBeanVector);
     }
 
-    public static void main(String[] args) {
-        Mt4Account mt4User = new Mt4Account(15708470013L, "80012391", "Ava-Real 5", "Lxtcfx8793", 1);
-
-        //循环获取mt4账户和密码
-        for (int i = 0; i < 10; i++) {
-
-        }
-
-
-        Mt4c mt4c = new Mt4c("192.168.1.6", 7788, new Broker(mt4User.getBroker()), mt4User.getUser() + "@" + mt4User.getBroker() + "SynHistoryOrdersAndAccountAsset", mt4User.getPassword());
-
-
-        try {
-            try {
-                mt4c.connect(Strategy.HistoryPeriod.ALL_HISTORY);
-                int ordersCount = mt4c.ordersHistoryTotal();
-
-                BigDecimal totalProfit;
-                BigDecimal yesterdayProfit = new BigDecimal("0.0");
-                BigDecimal todayProfit = new BigDecimal("0.0");
-                BigDecimal deposit = new BigDecimal("0.0");
-                BigDecimal withdrawal = new BigDecimal("0.0");
-
-                BigDecimal allOrdersProfit = new BigDecimal("0.0");
-                BigDecimal balanceOrdersProfit = new BigDecimal("0.0");
-                for (int i = 0; i < ordersCount; i++) {
-                    if (mt4c.orderSelect(i, SelectionType.SELECT_BY_POS, SelectionPool.MODE_HISTORY)) {
-//                whether to be added into history orders
-                        /*code*/
-                        allOrdersProfit = allOrdersProfit.add(new BigDecimal(mt4c.orderProfit())).add(new BigDecimal(mt4c.orderCommission())).add(new BigDecimal(mt4c.orderSwap()));
-                        System.out.println("allOrdersProfit " + allOrdersProfit);
-//                whether it is balance
-                        if (mt4c.orderType() > 5) {
-                            balanceOrdersProfit = balanceOrdersProfit.add(new BigDecimal(mt4c.orderProfit()));
-//                    compute the deposit and withdrawal
-                            if (mt4c.orderProfit() > 0.0) {
-                                deposit = deposit.add(new BigDecimal(mt4c.orderProfit()));
-                            } else {
-                                withdrawal = withdrawal.add(new BigDecimal(mt4c.orderProfit()));
-                            }
-                        }
-
-//                yesterday profit
-                        Date currentDate = mt4c.timeCurrent();
-                        if (AotfxDate.differentDays(currentDate, mt4c.orderCloseTime()) == -1) {
-                            yesterdayProfit = yesterdayProfit.add(new BigDecimal(mt4c.orderProfit()));
-                        }
-                    }
-                }
-//       Compute the total profit.
-                totalProfit = allOrdersProfit.subtract(balanceOrdersProfit);
-                System.out.println("allOrdersProfit " + allOrdersProfit);
-                System.out.println("balanceOrdersProfit " + balanceOrdersProfit);
-                System.out.println("totalProfit " + totalProfit);
-                System.out.println("deposit " + deposit);
-                System.out.println("withdrawal " + withdrawal);
-                System.out.println("yesterdayProfit " + yesterdayProfit);
-
-            } finally {
-                mt4c.close(true);
-
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
+    private HistoryOrderBean construct(Mt4Account mt4Account, Mt4c mt4c) throws ErrNoOrderSelected {
+        HistoryOrderBean historyOrderBean = new HistoryOrderBean.Builder(mt4Account.getTelephone(), mt4Account.getUser(), mt4c.orderTicketNumber())
+                .openTime(mt4c.orderOpenTime())
+                .type(mt4c.orderType()).size(mt4c.orderLots()).symbol(mt4c.orderSymbol())
+                .openPrice(new BigDecimal(mt4c.orderOpenPrice()).setScale(5, ROUND_HALF_UP))
+                .stopLoss(new BigDecimal(mt4c.orderStopLoss()).setScale(5, ROUND_HALF_UP))
+                .takeProfit(new BigDecimal(mt4c.orderTakeProfit()).setScale(5, ROUND_HALF_UP))
+                .closeTime(mt4c.orderCloseTime())
+                .closePrice(new BigDecimal(mt4c.orderClosePrice()).setScale(5, ROUND_HALF_UP))
+                .commission(new BigDecimal(mt4c.orderCommission()).setScale(2, ROUND_HALF_UP))
+                .taxes(new BigDecimal("0.0").setScale(2, ROUND_HALF_UP))
+                .swap(new BigDecimal(mt4c.orderSwap()).setScale(2, ROUND_HALF_UP))
+                .profit(new BigDecimal(mt4c.orderProfit()).setScale(2, ROUND_HALF_UP))
+                .comment(mt4c.orderComment()).build();
+        return historyOrderBean;
     }
 }

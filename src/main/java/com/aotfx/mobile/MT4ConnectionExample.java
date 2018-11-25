@@ -56,11 +56,11 @@ public class MT4ConnectionExample extends Strategy {
     static {
         System.setProperty("jfx_server_port", "7779");
         //如果程序和terminal server不在同一台电脑上，需要执行编写下面这句代码
-        System.setProperty("nj4x_server_host", "192.168.1.4");
+        System.setProperty("nj4x_server_host", "192.168.1.7");
     }
 
     public void connect() throws IOException {
-        this.withHistoryPeriod(Strategy.HistoryPeriod.ALL_HISTORY).connect("192.168.1.6", 7788, new Broker("107.154.197.81"), "80012391", "Lxtcfx8793");
+        this.withHistoryPeriod(Strategy.HistoryPeriod.ALL_HISTORY).connect("192.168.1.8", 7788, new Broker("FXCM-USDDemo01"), "3815241", "ur4bzys");
         // this.withHistoryPeriod(Strategy.HistoryPeriod.ALL_HISTORY).connect("192.168.1.4", 7788,  new Broker("162.13.94.164") ,"77011583", "Ava12345");
         //this.withHistoryPeriod(Strategy.HistoryPeriod.ALL_HISTORY).connect("192.168.1.4", 7788,  new Broker("mt4d01.fxcorporate.com") ,"3817104", "Ava12345");
 
@@ -72,6 +72,7 @@ public class MT4ConnectionExample extends Strategy {
 
     public static void main(String[] args) throws IOException {
         MT4ConnectionExample mt4c = new MT4ConnectionExample();
+
         System.out.println("======= Connecting ========= " + JFXServer.getInstance().getBindPort());
         mt4c.connect();
         System.out.println("======= Connected ========= ");
@@ -79,6 +80,7 @@ public class MT4ConnectionExample extends Strategy {
         System.out.println("Account info: symbols=" + mt4c.getSymbols());
 
         System.out.println("Account info: histroy orders =" + mt4c.ordersHistoryTotal());
+        System.out.println(mt4c.serverTimeGMTOffset()+"timezone");
         int ordersHistoryCount = mt4c.ordersHistoryTotal();
 //        for (int i = 0; i < ordersHistoryCount; i++) {
 //            if (mt4c.orderSelect(i, SelectionType.SELECT_BY_POS, SelectionPool.MODE_HISTORY)) {

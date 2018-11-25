@@ -37,20 +37,4 @@ public class MybatisPlusConfig {
         performanceInterceptor.setProperties(properties);
         return performanceInterceptor;
     }
-
-//    @Bean
-//    public SqlSessionFactory sqlSessionFactory() throws Exception {
-////        SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
-////        sqlSessionFactoryBean.setMapperLocations(new PathMatchingResourcePatternResolver().getResources(mapperLocations));
-////
-////        sqlSessionFactoryBean.setDataSource(druidDataSource);
-////        org.apache.ibatis.session.Configuration cfg = new org.apache.ibatis.session.Configuration();//configuration
-////        logger.info("sqlSessionFactoryBean:-->" + sqlSessionFactoryBean.getObject());
-////        logger.info("default-statement-timeout:" + dst);
-////        sqlSessionFactoryBean.setConfiguration(cfg);
-////        return sqlSessionFactoryBean.getObject();
-//        return null;
-//
-//
-//    }
 }
