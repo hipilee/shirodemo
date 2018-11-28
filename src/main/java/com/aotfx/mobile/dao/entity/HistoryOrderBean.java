@@ -12,7 +12,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("histroy_orders")
+@TableName("history_orders")
 public class HistoryOrderBean implements Cloneable {
 
     private Long telephone;
@@ -116,6 +116,7 @@ public class HistoryOrderBean implements Cloneable {
             return this;
         }
 
+        //comment最多只允许45个字符，如果设计传入的字符过长，则会被截断。
         public Builder comment(String comment) {
             int endInx = comment.length() > 45 ? 44 : comment.length();
             historyOrderBean.setComment(comment.substring(0, endInx));

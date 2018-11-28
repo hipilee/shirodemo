@@ -10,18 +10,17 @@ import com.aotfx.mobile.service.nj4x.IAccountAssetService;
 import com.aotfx.mobile.service.nj4x.IHistoryOrderService;
 import com.aotfx.mobile.service.nj4x.IMT4AccountService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.jfx.*;
 import com.jfx.strategy.Strategy;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.PersistJobDataAfterExecution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -35,9 +34,10 @@ import static java.math.BigDecimal.ROUND_HALF_UP;
  * @email hipilee@gamil.com leexiutao@foxmail.com
  * @create 2018-11-21 12:46
  */
+@PersistJobDataAfterExecution
 @DisallowConcurrentExecution
 public class SynHistoryOrdersAndAccountAsset implements BaseJob {
-    private static Logger _log = LoggerFactory.getLogger(SynHistoryOrdersAndAccountAsset.class);
+    private static Logger log = LoggerFactory.getLogger(SynHistoryOrdersAndAccountAsset.class);
 
     @Autowired
     IHistoryOrderService iHistoryOrderService;
@@ -53,19 +53,24 @@ public class SynHistoryOrdersAndAccountAsset implements BaseJob {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        _log.error("同步历史订单以及基本资产数据");
+        log.error("同步历史订单以及基本资产数据");
 
         Long startTime = System.currentTimeMillis();
+
+        //从数据库中读取用户
         QueryWrapper<Mt4Account> queryWrapper = new QueryWrapper<Mt4Account>().select("telephone", "user", "broker", "password", "status","time_zone_offset");
         List<Mt4Account> mt4AccountList = imt4AccountService.list(queryWrapper);
+
         //循环获取mt4账户和密码
         for (Mt4Account mt4Account :
                 mt4AccountList) {
 
+            //同步数据
             synData(mt4Account);
         }
+
         Long endTime = System.currentTimeMillis();
-        _log.error("同步历史订单和资产数据耗时：" + (endTime - startTime) / 1000 + " sec");
+        log.error("同步历史订单和资产数据耗时：" + (endTime - startTime) / 1000 + " sec");
     }
 
     private void synData(Mt4Account mt4Account) {
@@ -84,7 +89,10 @@ public class SynHistoryOrdersAndAccountAsset implements BaseJob {
                     if (retry) {
                         System.out.println(mt4Account.getUser() + "@" + mt4Account.getBroker() + "第" + (connectionTimes - 1) + "次重连");
                     }
+
+                    //登陆MT4服务器
                     mt4c.connect(Strategy.HistoryPeriod.ALL_HISTORY);
+
                     //构建准备写入数据库的数据
                     AccountAssetBean accountAssetBean;
                     Vector<HistoryOrderBean> historyOrderBeanVector = new Vector<>();
@@ -144,14 +152,7 @@ public class SynHistoryOrdersAndAccountAsset implements BaseJob {
                  * 比如说爱华的隔夜利息是和对应订单显示在一起的作为swap参数显示，而福汇则是单独作为一条balance订单显示*/
                 allOrdersProfit = allOrdersProfit.add(new BigDecimal(mt4c.orderProfit())).add(new BigDecimal(mt4c.orderCommission())).add(new BigDecimal(mt4c.orderSwap()));
 
-                /* 订单类型值大于5的都是balance订单。
-                OP_BUY,
-                OP_SELL ,
-                OP_BUYLIMIT ,
-                OP_BUYSTOP ,
-                OP_SELLLIMIT ,
-                OP_SELLSTOP
-                */
+                /* 订单类型值大于5的都是balance订单。OP_BUY,OP_SELL ,OP_BUYLIMIT ,OP_BUYSTOP ,OP_SELLLIMIT ,OP_SELLSTOP*/
                 if (mt4c.orderType() > 5) {
                     balanceOrdersProfit = balanceOrdersProfit.add(new BigDecimal(mt4c.orderProfit())).add(new BigDecimal(mt4c.orderCommission())).add(new BigDecimal(mt4c.orderSwap()));
                     //计算存款和出金
@@ -162,10 +163,9 @@ public class SynHistoryOrdersAndAccountAsset implements BaseJob {
                     }
                 }
 
-                // 昨日收益
-                //计算出mt4服务器的时间，由于周六周天服务器不更新服务器时间，所以在这种情况下需要自己手动计算服务器时间。
+                /* 昨日收益计算出mt4服务器的时间，由于周六周天服务器不更新服务器时间，
+                所以在这种情况下需要通过获取GMT+8区的时间， 然后自己手动计算服务器时间。*/
                 int offset=mt4Account.getTimeZoneOffset();
-
 
                 Calendar cal = Calendar.getInstance();
                 cal.setTime(new Date());
@@ -174,8 +174,8 @@ public class SynHistoryOrdersAndAccountAsset implements BaseJob {
 
 
 
-                //昨日收益
-                if (AotfxDate.differentDays(mt4Date, mt4c.orderCloseTime()) == -1) {
+                //计算昨日收益的时候只能计算非balance订单的orderCommission()+orderTaxes()+orderProfit().
+                if (AotfxDate.differentDays(mt4Date, mt4c.orderCloseTime()) == -1&&mt4c.orderType()<6) {
                     yesterdayProfit = yesterdayProfit.add(new BigDecimal(mt4c.orderProfit())).add(new BigDecimal(mt4c.orderCommission())).add(new BigDecimal(mt4c.orderSwap()));
                 }
             }

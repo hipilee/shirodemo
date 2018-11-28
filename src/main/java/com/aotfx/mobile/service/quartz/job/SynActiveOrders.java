@@ -11,17 +11,23 @@ import com.jfx.Broker;
 import com.jfx.ErrNoOrderSelected;
 import com.jfx.SelectionPool;
 import com.jfx.SelectionType;
+import com.jfx.strategy.NJ4XMaxNumberOfTerminalsExceededException;
 import com.jfx.strategy.Strategy;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.PersistJobDataAfterExecution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Vector;
 
+import static java.math.BigDecimal.ROUND_HALF_UP;
+
+@PersistJobDataAfterExecution
 @DisallowConcurrentExecution
 public class SynActiveOrders implements BaseJob {
     private static Logger _log = LoggerFactory.getLogger(SynActiveOrders.class);
@@ -42,10 +48,11 @@ public class SynActiveOrders implements BaseJob {
 
         Long startTime = System.currentTimeMillis();
 
+        //获取所有的MT4账户
         QueryWrapper<Mt4Account> queryWrapper = new QueryWrapper<Mt4Account>().select("telephone", "user", "broker", "password", "status");
         List<Mt4Account> mt4AccountList = imt4AccountService.list(queryWrapper);
 
-        //循环获取mt4账户和密码
+        //对每一个账户进行处理
         for (Mt4Account mt4Account :
                 mt4AccountList) {
 
@@ -55,7 +62,7 @@ public class SynActiveOrders implements BaseJob {
             int maxTimes = 4;
             boolean retry = false;
 
-            //最多可以两次
+            //最多可以(maxTimes-1)次
             do {
                 connectionTimes++;
                 try {
@@ -63,22 +70,29 @@ public class SynActiveOrders implements BaseJob {
                         if (retry) {
                             System.out.println(mt4Account.getUser() + "@" + mt4Account.getBroker() + "第" + (connectionTimes - 1) + "次重连");
                         }
+
+                        //登陆MT4服务器
                         mt4c.connect(Strategy.HistoryPeriod.ALL_HISTORY);
 
                         // hide from market watch to minimize traffic/CPU usage
                         for (String s : mt4c.getSymbols()) {
                             mt4c.symbolSelect(s, false);
                         }
-                        Vector<ActiveOrderBean> activeOrderBeanVector = new Vector<>();
 
+                        //组装持仓订单数据
+                        Vector<ActiveOrderBean> activeOrderBeanVector = new Vector<>();
                         activeOrderBeanVector = assembleActiveOrders(mt4Account, mt4c, activeOrderBeanVector);
+
+                        //将持仓订单数据写入数据库
                         databaseCRUD(activeOrderBeanVector, mt4Account);
                     } finally {
                         mt4c.close(true);
                     }
-                } catch (Exception e) {
-                    //如果连接过程报错，则尝试重新连接
+                } catch (NJ4XMaxNumberOfTerminalsExceededException e) {
+                    //如果是连接过程报错，则尝试重新连接
                     retry = true;
+                    e.printStackTrace();
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             } while (retry && (connectionTimes < maxTimes));
@@ -93,20 +107,29 @@ public class SynActiveOrders implements BaseJob {
 
     private Vector<ActiveOrderBean> assembleActiveOrders(Mt4Account mt4Account, Mt4c mt4c, Vector<ActiveOrderBean> activeOrderBeanVector) {
 
-        //Find the reality account number and telephone.
-        String user = mt4c.getMt4User().substring(0, mt4c.getMt4User().indexOf("@"));
 
-        Long telephone = mt4Account.getTelephone();
+        int ordersCount = mt4c.ordersTotal();
 
-        int ordersCount = mt4c.ordersHistoryTotal();
         for (int i = 0; i < ordersCount; i++) {
             if (mt4c.orderSelect(i, SelectionType.SELECT_BY_POS, SelectionPool.MODE_TRADES)) {
                 try {
 
                     //Add every order into vector.
-                    ActiveOrderBean activeOrderBean = new ActiveOrderBean(telephone, user, mt4c.orderTicketNumber(), mt4c.orderOpenTime(), mt4c.orderType(),
-                            mt4c.orderLots(), mt4c.orderSymbol(), mt4c.orderOpenPrice(), mt4c.orderStopLoss(), mt4c.orderTakeProfit(), mt4c.orderClosePrice(),
-                            mt4c.orderComment(), mt4c.orderCommission(), 0.0, mt4c.orderSwap(), mt4c.orderProfit());
+                    ActiveOrderBean activeOrderBean = new ActiveOrderBean.Builder(mt4Account.getTelephone(), mt4Account.getUser(), mt4c.orderTicketNumber())
+                            .openTime(mt4c.orderOpenTime())
+                            .type(mt4c.orderType())
+                            .size(mt4c.orderLots())
+                            .symbol(mt4c.orderSymbol())
+                            .openPrice(new BigDecimal(mt4c.orderOpenPrice()).setScale(2, ROUND_HALF_UP))
+                            .stopLoss(new BigDecimal(mt4c.orderStopLoss()).setScale(2, ROUND_HALF_UP))
+                            .takeProfit(new BigDecimal(mt4c.orderTakeProfit()).setScale(2, ROUND_HALF_UP))
+                            .currentPrice(new BigDecimal(mt4c.orderClosePrice()).setScale(2, ROUND_HALF_UP))
+                            .commission(new BigDecimal(mt4c.orderCommission()).setScale(2, ROUND_HALF_UP))
+                            .taxes(new BigDecimal("0.0").setScale(2, ROUND_HALF_UP))
+                            .swap(new BigDecimal(mt4c.orderSwap()).setScale(2, ROUND_HALF_UP))
+                            .profit(new BigDecimal(mt4c.orderProfit()).setScale(2, ROUND_HALF_UP))
+                            .comment(mt4c.orderComment()).build();
+
                     activeOrderBeanVector.add(activeOrderBean);
                 } catch (ErrNoOrderSelected errNoOrderSelected) {
                     errNoOrderSelected.printStackTrace();

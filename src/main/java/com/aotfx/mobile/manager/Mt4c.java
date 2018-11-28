@@ -19,6 +19,7 @@ public class Mt4c extends Strategy {
 
         System.setProperty("nj4x_server_host", "192.168.1.7");
     }
+
     private static Lock connectLock = new ReentrantLock();
 
     private String termServerHost;
@@ -40,18 +41,21 @@ public class Mt4c extends Strategy {
 
     public void connect(Strategy.HistoryPeriod historyPeriod) throws Exception {
         connectLock.lock();
-        System.out.println(Thread.currentThread().getId()+"号线程开始连接====");
+        System.out.println(mt4User+Thread.currentThread().getId() + "号线程 开始连接====");
         Long startTime = System.currentTimeMillis();
+        Long endTime;
         try {
             try {
                 this.withHistoryPeriod(historyPeriod).connect(termServerHost, termServerPort, mt4Server, mt4User, mt4Password);
+                endTime = System.currentTimeMillis();
+                System.out.println(mt4User+Thread.currentThread().getId() + "号线程 连接成功，耗时：" + (endTime - startTime) / 1000 + "sec");
             } finally {
                 connectLock.unlock();
 
-                Long endTime = System.currentTimeMillis();
-                System.out.println(Thread.currentThread().getId()+"号线程结束连接====耗时："+(endTime-startTime)/1000+"sec");
             }
         } catch (IOException e) {
+            endTime = System.currentTimeMillis();
+            System.out.println(Thread.currentThread().getId() + "号线程 连接失败，耗时：" + (endTime - startTime) / 1000 + "sec");
             e.printStackTrace();
             throw e;
         }

@@ -1,10 +1,11 @@
 package com.aotfx.mobile.controller;
 
 import com.aotfx.mobile.common.utils.SysResult;
-import com.aotfx.mobile.service.BaseService;
+import com.aotfx.mobile.service.UserService;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,76 +22,58 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class MyController {
 
     @Autowired
-    private BaseService baseService;
+    private UserService baseService;
 
     private final Logger logger = LoggerFactory.getLogger(MyController.class);
 
-
     @RequestMapping("/doLogin")
-    public String doLogin(@RequestParam(name="username") String username,
+    public String doLogin(@RequestParam(name = "telephone") String telephone,
                           @RequestParam("password") String password) {
         // 创建Subject实例
         Subject currentUser = SecurityUtils.getSubject();
 
-        // 将用户名及密码封装到UsernamePasswordToken
-        UsernamePasswordToken token = new UsernamePasswordToken(username, password);
+        Session session = currentUser.getSession(true);
+        String sessionTelephone = session.getAttribute("telephone") != null ? (String) session.getAttribute("telephone") : null;
+        System.out.println(session.getId());
 
-        try {
-            currentUser.login(token);
-            // 判断当前用户是否登录
-            if (currentUser.isAuthenticated() ) {
-                return "/index.html";
+        // 判断当前用户是否登录
+        if (!currentUser.isAuthenticated() || !telephone.equals(sessionTelephone)) {
+            logger.error("没有登录");
+            try {
+                System.out.println(session.getAttribute("telephone") + "=====================================================登录中");
+
+                // 将用户名及密码封装到UsernamePasswordToken
+                UsernamePasswordToken token = new UsernamePasswordToken(telephone, password);
+                currentUser.login(token);
+
+                //在session中添加标记用户的电话号码
+                session.setAttribute("telephone", telephone);
+
+            } catch (AuthenticationException e) {
+                e.printStackTrace();
+                System.out.println("登录失败");
+//                return new SysResult<Object>(11, "登录失败", "");
+                return "loginPage.html";
             }
-        } catch (AuthenticationException e) {
-            e.printStackTrace();
-            System.out.println("登录失败");
+        } else {
+            logger.error("已经登录");
         }
-        return "/loginPage.html";
+//        return new SysResult<Object>(10, "登录成功", "");
+        return "index.html";
     }
 
-    @RequestMapping("/doLogin1")
-    public String doLogin1(@RequestParam(name="telphone") String username,
-                          @RequestParam("password") String password) {
-        // 创建Subject实例
-        Subject currentUser = SecurityUtils.getSubject();
-
-        // 将用户名及密码封装到UsernamePasswordToken
-        UsernamePasswordToken token = new UsernamePasswordToken(username, password);
-
-        try {
-            currentUser.login(token);
-            // 判断当前用户是否登录
-            if (currentUser.isAuthenticated()) {
-                return "/index.html";
-            }
-        } catch (AuthenticationException e) {
-            e.printStackTrace();
-            System.out.println("登录失败");
-        }
-        return "/loginPage.html";
-    }
-
-    @RequestMapping("/doRegister")
-    public String doRegister(@RequestParam("username") String username,
-                             @RequestParam("password") String password) {
-
-//        boolean result = baseService.registerUser(username,password);
-//        if(result){
-//            return "/login";
-//        }
-        return "/register";
-    }
 
     @RequestMapping("/doRegister1")
     @ResponseBody
-    public SysResult doRegister1(@RequestParam(value="telphone")String telphone, @RequestParam(value = "username") String username,
-                             @RequestParam(value = "password") String password) {
+    public SysResult doRegister1(@RequestParam(value = "telephone") String telephone, @RequestParam(value = "username") String username, @RequestParam(value = "password") String password) {
 
-        boolean result = baseService.registerUser(telphone,username,password);
-        if(result){
-            return new SysResult<Object>(10,"注册成功","");
+        System.out.print("telephone " + telephone);
+
+        boolean result = baseService.registerUser(telephone, username, password);
+        if (result) {
+            return new SysResult<Object>(10, "注册成功", "");
         }
-        return new SysResult<Object>(11,"信息有误，检查后重试","");
+        return new SysResult<Object>(11, "信息有误，检查后重试", "");
     }
 
     @RequestMapping(value = "/login")
