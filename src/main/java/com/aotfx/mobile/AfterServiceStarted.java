@@ -37,7 +37,5 @@ public class AfterServiceStarted implements ApplicationRunner {
             log.info("在" + nj4xConfig.getTerminalServerHost() + "：" + nj4xConfig.getTerminalServerPort() +" 上关闭ts所有连接失败，请检查nj4x_terminal_sever是否正常启动！");
         }
 
-
-
     }
 }

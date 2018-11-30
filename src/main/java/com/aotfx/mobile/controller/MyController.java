@@ -53,10 +53,8 @@ public class MyController extends AotfxBaseController {
                 session.setAttribute("telephone", telephone);
 
             } catch (AuthenticationException e) {
-                throw e;
+                return SysResult.build(10, "登录失败", null);
             }
-        } else {
-            return SysResult.build(11, "登录失败", null);
         }
         return SysResult.build(11, "登录成功", null);
 

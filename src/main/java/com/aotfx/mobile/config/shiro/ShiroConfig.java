@@ -3,6 +3,7 @@ package com.aotfx.mobile.config.shiro;
 import com.aotfx.mobile.filter.shiro.AotfxFormAuthenticationFilter;
 import com.aotfx.mobile.beans.ShiroRealm;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
