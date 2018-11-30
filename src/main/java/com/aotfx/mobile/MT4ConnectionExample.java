@@ -65,7 +65,7 @@ public class MT4ConnectionExample extends Strategy {
     }
 
     public void connect() throws IOException {
-//        this.withHistoryPeriod(Strategy.HistoryPeriod.ALL_HISTORY).connect("192.168.1.8", 7788, new Broker("FXCM-USDDemo01"), "3815241", "ur4bzys");
+//        this.withHistoryPeriod(Strategy.HistoryPeriod.ALL_HISTORY).connect("39.108.14.200", 7788, new Broker("FXCM-USDDemo01"), "3815241", "ur4bzys");
         // this.withHistoryPeriod(Strategy.HistoryPeriod.ALL_HISTORY).connect("192.168.1.4", 7788,  new Broker("162.13.94.164") ,"77011583", "Ava12345");
         //this.withHistoryPeriod(Strategy.HistoryPeriod.ALL_HISTORY).connect("192.168.1.4", 7788,  new Broker("mt4d01.fxcorporate.com") ,"3817104", "Ava12345");
         this.withHistoryPeriod(Strategy.HistoryPeriod.ALL_HISTORY).connect("192.168.1.8", 7788, new Broker("ICMarkets-Demo03"), "30143803", "msxi71");
@@ -104,49 +104,49 @@ public class MT4ConnectionExample extends Strategy {
 
 
 
-
-        for (int i = 0; i < 1; i++) {
-            if (mt4c.orderSelect(i, SelectionType.SELECT_BY_POS, SelectionPool.MODE_HISTORY)) {
-                try {
-//                    int type = mt4c.orderType(); // see TradeOperation
-//                    System.out.println(String.format("history order symbol=%s, type=%s, #%s,P/L=%fP/L=%f P/L=%f, comments=%s",
-//                            mt4c.orderSymbol(), mt4c.orderType(),TimeTrans.transferLongToDate("yyyy-MM-dd HH:mm:ss",  mt4c.orderOpenTime()), mt4c.orderProfit(), mt4c.orderComment())
-//                    );
-
-
-//                    String gbk = new String(mt4c.orderComment().getBytes("decode"), "code");
-//                    System.out.println(gbk);
-
-//                    System.out.printf(mt4c.orderOpenPrice()+"");
-//                    System.out.printf(mt4c.orderClosePrice() + "");
-
-
-
-
-                    Map<String, Charset> map = Charset.availableCharsets();
-                    for (Map.Entry<String, Charset> entry1 : map.entrySet()) {
-                        System.out.println("Key = " + entry1.getKey() + ", Value = " + entry1.getValue());
-                        for (Map.Entry<String, Charset> entry2 : map.entrySet()) {
-                            System.out.println("Key = " + entry2.getKey() + ", Value = " + entry2.getValue());
-
-                            try {
-                                String gbk1 = new String(mt4c.orderComment().getBytes(entry1.getKey()), entry2.getKey());
-                                System.out.println("======"+gbk1);
-
-                                String gbk2 = new String(mt4c.orderComment().getBytes(entry2.getKey()), entry1.getKey());
-                                System.out.println("======"+gbk2);
-                            } catch (UnsupportedEncodingException e) {
-                                e.printStackTrace();
-                            }
-
-                        }
-                    }
-
-                } catch (ErrNoOrderSelected errNoOrderSelected) {
-                    errNoOrderSelected.printStackTrace();
-                }
-            }
-        }
+//
+//        for (int i = 0; i < 1; i++) {
+//            if (mt4c.orderSelect(i, SelectionType.SELECT_BY_POS, SelectionPool.MODE_HISTORY)) {
+//                try {
+////                    int type = mt4c.orderType(); // see TradeOperation
+////                    System.out.println(String.format("history order symbol=%s, type=%s, #%s,P/L=%fP/L=%f P/L=%f, comments=%s",
+////                            mt4c.orderSymbol(), mt4c.orderType(),TimeTrans.transferLongToDate("yyyy-MM-dd HH:mm:ss",  mt4c.orderOpenTime()), mt4c.orderProfit(), mt4c.orderComment())
+////                    );
+//
+//
+////                    String gbk = new String(mt4c.orderComment().getBytes("decode"), "code");
+////                    System.out.println(gbk);
+//
+////                    System.out.printf(mt4c.orderOpenPrice()+"");
+////                    System.out.printf(mt4c.orderClosePrice() + "");
+//
+//
+//
+//
+//                    Map<String, Charset> map = Charset.availableCharsets();
+//                    for (Map.Entry<String, Charset> entry1 : map.entrySet()) {
+//                        System.out.println("Key = " + entry1.getKey() + ", Value = " + entry1.getValue());
+//                        for (Map.Entry<String, Charset> entry2 : map.entrySet()) {
+//                            System.out.println("Key = " + entry2.getKey() + ", Value = " + entry2.getValue());
+//
+//                            try {
+//                                String gbk1 = new String(mt4c.orderComment().getBytes(entry1.getKey()), entry2.getKey());
+//                                System.out.println("======"+gbk1);
+//
+//                                String gbk2 = new String(mt4c.orderComment().getBytes(entry2.getKey()), entry1.getKey());
+//                                System.out.println("======"+gbk2);
+//                            } catch (UnsupportedEncodingException e) {
+//                                e.printStackTrace();
+//                            }
+//
+//                        }
+//                    }
+//
+//                } catch (ErrNoOrderSelected errNoOrderSelected) {
+//                    errNoOrderSelected.printStackTrace();
+//                }
+//            }
+//        }
 
         System.out.println("Account info: active orders =" + mt4c.ordersTotal());
         int ordersCount = mt4c.ordersTotal();

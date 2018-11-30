@@ -1,5 +1,6 @@
 package com.aotfx.mobile.config.shiro;
 
+import com.aotfx.mobile.filter.shiro.AotfxFormAuthenticationFilter;
 import com.aotfx.mobile.beans.ShiroRealm;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.mgt.SecurityManager;
@@ -18,26 +19,31 @@ public class ShiroConfig {
     public ShiroFilterFactoryBean shirFilter(SecurityManager securityManager) {
         ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
         shiroFilterFactoryBean.setSecurityManager(securityManager);
+
+        shiroFilterFactoryBean.getFilters().put("authc",new AotfxFormAuthenticationFilter());
+
         // 拦截器。匹配原则是最上面的最优先匹配
-        Map<String,String> filterChainDefinitionMap = new LinkedHashMap<String,String>();
+        Map<String, String> filterChainDefinitionMap = new LinkedHashMap<String, String>();
+
         // 配置不会被拦截的链接
         filterChainDefinitionMap.put("/login", "anon");
         filterChainDefinitionMap.put("/doLogin", "anon");
+        filterChainDefinitionMap.put("/register", "anon");
         filterChainDefinitionMap.put("/doRegister", "anon");
         filterChainDefinitionMap.put("/doRegister1", "anon");
-        filterChainDefinitionMap.put("/register", "anon");
         filterChainDefinitionMap.put("/static/**", "anon");
-        filterChainDefinitionMap.put("/api/**", "anon");
         filterChainDefinitionMap.put("/job/**", "anon");
         filterChainDefinitionMap.put("/JobManager", "anon");
+        filterChainDefinitionMap.put("/logout", "anon");
 
         // 配置退出 过滤器,其中的具体的退出代码Shiro已经替我们实现了
         filterChainDefinitionMap.put("/doLogout", "logout");
 
         // 剩余请求需要身份认证
         filterChainDefinitionMap.put("/**", "authc");
+
         // 如果不设置默认会自动寻找Web工程根目录下的"/login.jsp"页面
-        shiroFilterFactoryBean.setLoginUrl("/login");
+//        shiroFilterFactoryBean.setLoginUrl("/login");
 
         // 未授权界面;
 //        shiroFilterFactoryBean.setUnauthorizedUrl("/403");
@@ -46,7 +52,7 @@ public class ShiroConfig {
     }
 
     @Bean(name = "myShiroRealm")
-    public ShiroRealm myShiroRealm(HashedCredentialsMatcher matcher){
+    public ShiroRealm myShiroRealm(HashedCredentialsMatcher matcher) {
         ShiroRealm myShiroRealm = new ShiroRealm();
         myShiroRealm.setCredentialsMatcher(matcher);
         return myShiroRealm;
@@ -54,8 +60,8 @@ public class ShiroConfig {
 
 
     @Bean
-    public SecurityManager securityManager(@Qualifier("hashedCredentialsMatcher") HashedCredentialsMatcher matcher){
-        DefaultWebSecurityManager securityManager =  new DefaultWebSecurityManager();
+    public SecurityManager securityManager(@Qualifier("hashedCredentialsMatcher") HashedCredentialsMatcher matcher) {
+        DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
         securityManager.setRealm(myShiroRealm(matcher));
         return securityManager;
     }

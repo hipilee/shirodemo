@@ -12,23 +12,26 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+
 
 /**
  * Created by myz on 2017/7/4.
  */
 @Controller
-public class MyController {
+public class MyController extends AotfxBaseController {
 
     @Autowired
     private UserService baseService;
 
     private final Logger logger = LoggerFactory.getLogger(MyController.class);
 
-    @RequestMapping("/doLogin")
-    public String doLogin(@RequestParam(name = "telephone") String telephone,
-                          @RequestParam("password") String password) {
+    @ResponseBody
+    @RequestMapping(value = "/doLogin", method = {RequestMethod.POST, RequestMethod.GET})
+    public SysResult doLogin(@RequestParam(name = "telephone") String telephone,
+                                     @RequestParam("password") String password) {
         // 创建Subject实例
         Subject currentUser = SecurityUtils.getSubject();
 
@@ -50,16 +53,13 @@ public class MyController {
                 session.setAttribute("telephone", telephone);
 
             } catch (AuthenticationException e) {
-                e.printStackTrace();
-                System.out.println("登录失败");
-//                return new SysResult<Object>(11, "登录失败", "");
-                return "loginPage.html";
+                throw e;
             }
         } else {
-            logger.error("已经登录");
+            return SysResult.build(11, "登录失败", null);
         }
-//        return new SysResult<Object>(10, "登录成功", "");
-        return "index.html";
+        return SysResult.build(11, "登录成功", null);
+
     }
 
 
@@ -80,6 +80,23 @@ public class MyController {
     public String login() {
         logger.info("login() 方法被调用");
         return "loginPage.html";
+    }
+
+    //用户退出
+    @ResponseBody
+    @RequestMapping("/logout")
+    public SysResult logout() {
+
+        SysResult sysResult;
+
+        try {
+            SecurityUtils.getSubject().logout();
+        } catch (Exception e) {
+            sysResult = SysResult.build(11,"退出失败",null);
+            return sysResult;
+        }
+        sysResult = SysResult.build(10,"退出成功",null);
+        return sysResult;
     }
 
     @RequestMapping(value = "/register")

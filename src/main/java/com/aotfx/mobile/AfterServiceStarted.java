@@ -9,9 +9,11 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+
 
 /**
- * @Description 在启动完成后执行特定代码
+ * @Description 在启动完成后执行特定代码,如连接上nj4x-terminal-server，关闭先前未关闭的mt4客户端
  * @auther xiutao li
  * @email hipilee@gamil.com leexiutao@foxmail.com
  * @create 2018-11-27 15:55
@@ -26,15 +28,16 @@ public class AfterServiceStarted implements ApplicationRunner {
     private Nj4xConfig nj4xConfig;
 
     @Override
-    public void run(ApplicationArguments args) throws Exception {
-        log.info("关闭ts所有连接！"+nj4xConfig.getTerminalServerHost()+ "  " +nj4xConfig.getTerminalServerPort());
+    public void run(ApplicationArguments args) {
 
-        boolean res = new TerminalClient(nj4xConfig.getTerminalServerHost(), nj4xConfig.getTerminalServerPort()).killTerminals();
-
-        if(!res){
-            throw new Exception("Fail to kill all terminals.");
-        }else{
-            log.info("关闭ts所有连接成功！");
+        try {
+            boolean res =new TerminalClient(nj4xConfig.getTerminalServerHost(), nj4xConfig.getTerminalServerPort()).killTerminals();
+            log.info("在" + nj4xConfig.getTerminalServerHost() + " ：" + nj4xConfig.getTerminalServerPort() + " 上关闭ts所有连接成功！");
+        } catch (IOException e) {
+            log.info("在" + nj4xConfig.getTerminalServerHost() + "：" + nj4xConfig.getTerminalServerPort() +" 上关闭ts所有连接失败，请检查nj4x_terminal_sever是否正常启动！");
         }
+
+
+
     }
 }

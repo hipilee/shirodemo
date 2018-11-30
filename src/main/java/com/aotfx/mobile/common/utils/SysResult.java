@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * @Description 封装访问结果
  * @auther xiutao li
@@ -13,10 +15,19 @@ import lombok.NoArgsConstructor;
  */
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class SysResult<T> {
     private int code;
     private String message;
     private T data;
+
+    public SysResult(int code, String message, T data) {
+        this.code = code;
+        this.message = message;
+        this.data = data;
+    }
+
+    public static <T> SysResult<T> build(int code, String message, T data) {
+
+        return new SysResult<>(code, message, data);
+    }
 }

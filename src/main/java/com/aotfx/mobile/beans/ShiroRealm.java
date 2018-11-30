@@ -1,12 +1,10 @@
 package com.aotfx.mobile.beans;
 
 
-import com.aotfx.mobile.dao.entity.User;
 import com.aotfx.mobile.service.UserService;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
-import org.apache.shiro.realm.AuthenticatingRealm;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.util.ByteSource;
@@ -92,6 +90,4 @@ public class ShiroRealm extends AuthorizingRealm {
 //        info.addStringPermissions(permissions);
         return info;
     }
-
-
 }
