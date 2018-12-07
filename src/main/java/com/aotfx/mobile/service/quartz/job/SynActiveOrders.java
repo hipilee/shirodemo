@@ -49,7 +49,7 @@ public class SynActiveOrders implements BaseJob {
         Long startTime = System.currentTimeMillis();
 
         //获取所有的MT4账户
-        QueryWrapper<Mt4Account> queryWrapper = new QueryWrapper<Mt4Account>().select("telephone", "user", "broker", "password", "status");
+        QueryWrapper<Mt4Account> queryWrapper = new QueryWrapper<Mt4Account>().select("user_id", "user", "broker", "password", "status", "time_zone_offset","is_default","create_time","update_time");
         List<Mt4Account> mt4AccountList = imt4AccountService.list(queryWrapper);
 
         //对每一个账户进行处理
@@ -115,7 +115,7 @@ public class SynActiveOrders implements BaseJob {
                 try {
 
                     //Add every order into vector.
-                    ActiveOrderBean activeOrderBean = new ActiveOrderBean.Builder(mt4Account.getTelephone(), mt4Account.getUser(), mt4c.orderTicketNumber())
+                    ActiveOrderBean activeOrderBean = new ActiveOrderBean.Builder(mt4Account.getUserId(), mt4Account.getUser(), mt4c.orderTicketNumber())
                             .openTime(mt4c.orderOpenTime())
                             .type(mt4c.orderType())
                             .size(mt4c.orderLots())
@@ -144,13 +144,10 @@ public class SynActiveOrders implements BaseJob {
 
         //delete all orders of the current account according to the columns telephone and user.
         QueryWrapper<ActiveOrderBean> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user", mt4User.getUser()).eq("telephone", mt4User.getTelephone());
+        queryWrapper.eq("user", mt4User.getUser()).eq("user_id", mt4User.getUserId());
         iActiveOrderService.remove(queryWrapper);
 
         //insert all orders of active orders into database by batch method.
         iActiveOrderService.saveBatch(activeOrderBeanVector);
-
     }
-
-
 }

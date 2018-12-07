@@ -16,7 +16,7 @@ import java.util.Date;
 @TableName("active_orders")
 public class ActiveOrderBean implements Cloneable {
 
-    private Long telephone;
+    private Long userId;
     private String user;
 
     //    订单编号
@@ -40,12 +40,15 @@ public class ActiveOrderBean implements Cloneable {
     private BigDecimal profit;
     private String comment;
 
+    private Date createTime;
+    private Date updateTime;
+
     public static class Builder {
         private ActiveOrderBean activeOrderBean;
 
-        public Builder(Long telephone, String user, Long orderNumber) {
+        public Builder(Long userId, String user, Long orderNumber) {
             this.activeOrderBean = new ActiveOrderBean();
-            this.activeOrderBean.setTelephone(telephone);
+            this.activeOrderBean.setUserId(userId);
             this.activeOrderBean.setUser(user);
             this.activeOrderBean.setOrderNumber(orderNumber);
         }

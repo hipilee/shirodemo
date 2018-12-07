@@ -8,6 +8,8 @@ spring:
     username: root
     password: 342@fj*&A
     driver-class-name: com.mysql.cj.jdbc.Driver
+  thymeleaf:
+    prefix: classpath:/templates
 
 mybatis-plus:
   mapper-locations: classpath:/mapper/*Mapper.xml

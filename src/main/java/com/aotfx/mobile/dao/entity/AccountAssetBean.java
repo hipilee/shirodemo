@@ -8,14 +8,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @TableName("assets")
 public class AccountAssetBean implements Cloneable {
-    @TableField(value = "telephone")
-    private Long telephone;
+    @TableField(value = "user_id")
+    private Long userId;
 
     @TableField(value = "user")
     private String user;
@@ -47,13 +48,16 @@ public class AccountAssetBean implements Cloneable {
     @TableField(value = "yesterday_profit_loss")
     private BigDecimal yesterdayProfitLoss;
 
+    private Date createTime;
+    private Date updateTime;
+
     public static class Builder {
 
         private AccountAssetBean accountAssetBean;
 
-        public Builder(Long telephone, String user) {
+        public Builder(Long userId, String user) {
             accountAssetBean = new AccountAssetBean();
-            accountAssetBean.setTelephone(telephone);
+            accountAssetBean.setUserId(userId);
             accountAssetBean.setUser(user);
         }
 

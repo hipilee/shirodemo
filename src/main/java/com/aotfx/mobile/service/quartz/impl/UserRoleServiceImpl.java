@@ -12,9 +12,5 @@ import java.util.List;
 
 @Service
 public class UserRoleServiceImpl extends ServiceImpl<UserRoleVoMapper, UserRoleVo> implements UserRoleVoService {
-    @Override
-    public List<UserRoleVo> selectUserListPage(Page<UserRoleVo> page) {
 
-        return  this.baseMapper.selectUserListPage(page);
-    }
 }

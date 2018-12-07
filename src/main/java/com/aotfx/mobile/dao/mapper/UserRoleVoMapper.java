@@ -8,6 +8,4 @@ import org.apache.ibatis.annotations.Select;
 import java.util.List;
 
 public interface UserRoleVoMapper extends BaseMapper<UserRoleVo> {
-    @Select("SELECT * FROM fy_user u LEFT JOIN fy_role r ON u.role = r.id")
-    List<UserRoleVo> selectUserListPage(Page<UserRoleVo> page);
 }

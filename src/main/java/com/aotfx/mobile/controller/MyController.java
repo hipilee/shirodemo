@@ -1,7 +1,11 @@
 package com.aotfx.mobile.controller;
 
+import com.aotfx.mobile.common.utils.RSA;
 import com.aotfx.mobile.common.utils.SysResult;
-import com.aotfx.mobile.service.UserService;
+import com.aotfx.mobile.dao.entity.User;
+import com.aotfx.mobile.service.IUserService;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.UsernamePasswordToken;
@@ -24,50 +28,90 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class MyController extends AotfxBaseController {
 
     @Autowired
-    private UserService baseService;
+    private IUserService iUserService;
 
     private final Logger logger = LoggerFactory.getLogger(MyController.class);
 
     @ResponseBody
     @RequestMapping(value = "/doLogin", method = {RequestMethod.POST, RequestMethod.GET})
     public SysResult doLogin(@RequestParam(name = "telephone") String telephone,
-                                     @RequestParam("password") String password) {
+                             @RequestParam("password") String password, @RequestParam("captcha") String captcha) {
+
+
         // 创建Subject实例
         Subject currentUser = SecurityUtils.getSubject();
 
         Session session = currentUser.getSession(true);
-        String sessionTelephone = session.getAttribute("telephone") != null ? (String) session.getAttribute("telephone") : null;
-        System.out.println(session.getId());
+
+        User user = session.getAttribute("user") != null ? (User) session.getAttribute("user") : null;
+        logger.info("当前用户的sessionID" + session.getId());
+
+        String telephoneFromSession;
+        try {
+            telephoneFromSession = user == null ? null : new String(RSA.decryptByPublicKey(Base64.decodeBase64(user.getEncryptTelephone()), RSA.getAotfxPublicKey()));
+        } catch (Exception e) {
+            return SysResult.build(10, "登录失败,服务器内部错误", null);
+        }
 
         // 判断当前用户是否登录
-        if (!currentUser.isAuthenticated() || !telephone.equals(sessionTelephone)) {
+        if (!currentUser.isAuthenticated() || !telephone.equals(telephoneFromSession)) {
+
+            //如果当前回话话有另外一个用户登陆，那么需要先推出当前用户。
+            if (!telephone.equals(telephoneFromSession)) {
+                currentUser.logout();
+                currentUser = SecurityUtils.getSubject();
+                session = currentUser.getSession(true);
+            }
+
             logger.error("没有登录");
             try {
                 System.out.println(session.getAttribute("telephone") + "=====================================================登录中");
 
-                // 将用户名及密码封装到UsernamePasswordToken
-                UsernamePasswordToken token = new UsernamePasswordToken(telephone, password);
+
+                //查找出当前电话对应在数据库里面的人
+                QueryWrapper<User> isExistByTelephone = new QueryWrapper<>();
+                String encrypt_telephone;
+                try {
+                    encrypt_telephone = Base64.encodeBase64String(RSA.encryptByPrivateKey(telephone.getBytes(), RSA.getAotfxPrivateKey()));
+
+                } catch (Exception e) {
+                    logger.error("对 " + telephone + " 私钥加密异常！");
+                    return SysResult.build(10, "登录失败,服务器内部错误", null);
+                }
+                isExistByTelephone.eq("encrypt_telephone", encrypt_telephone);
+                final User userFromDb = iUserService.getOne(isExistByTelephone);
+
+                UsernamePasswordToken token;
+                if (userFromDb == null) {
+
+                    throw new AuthenticationException("用户不存在！");
+                } else {
+                    // 将用户名及密码封装到UsernamePasswordToken
+                    token = new UsernamePasswordToken(telephone, password);
+                }
+
                 currentUser.login(token);
 
                 //在session中添加标记用户的电话号码
-                session.setAttribute("telephone", telephone);
+                session.setAttribute("user", userFromDb);
 
             } catch (AuthenticationException e) {
-                return SysResult.build(10, "登录失败", null);
+                return SysResult.build(11, "登录失败,用户名或者密码错误", null);
             }
         }
-        return SysResult.build(11, "登录成功", null);
+
+        return SysResult.build(10, "登录成功", null);
 
     }
 
 
-    @RequestMapping("/doRegister1")
+    @RequestMapping("/doRegister")
     @ResponseBody
-    public SysResult doRegister1(@RequestParam(value = "telephone") String telephone, @RequestParam(value = "username") String username, @RequestParam(value = "password") String password) {
+    public SysResult doRegister(@RequestParam(value = "telephone") String telephone, @RequestParam(value = "username") String username, @RequestParam(value = "password") String password, @RequestParam(value = "captcha") String captcha) {
 
         System.out.print("telephone " + telephone);
 
-        boolean result = baseService.registerUser(telephone, username, password);
+        boolean result = iUserService.registerUser(telephone, username, password, captcha);
         if (result) {
             return new SysResult<Object>(10, "注册成功", "");
         }
@@ -77,7 +121,7 @@ public class MyController extends AotfxBaseController {
     @RequestMapping(value = "/login")
     public String login() {
         logger.info("login() 方法被调用");
-        return "loginPage.html";
+        return "/loginPage";
     }
 
     //用户退出
@@ -90,28 +134,28 @@ public class MyController extends AotfxBaseController {
         try {
             SecurityUtils.getSubject().logout();
         } catch (Exception e) {
-            sysResult = SysResult.build(11,"退出失败",null);
+            sysResult = SysResult.build(11, "退出失败", null);
             return sysResult;
         }
-        sysResult = SysResult.build(10,"退出成功",null);
+        sysResult = SysResult.build(10, "退出成功", null);
         return sysResult;
     }
 
     @RequestMapping(value = "/register")
     public String register() {
         logger.info("register() 方法被调用");
-        return "registerPage.html";
+        return "/registerPage";
     }
 
     @RequestMapping(value = "/hello")
     public String hello() {
         logger.info("hello() 方法被调用");
-        return "helloPage.html";
+        return "/helloPage";
     }
 
     @RequestMapping(value = "/JobManager")
     public String JobManager() {
         logger.info("JobManager() 方法被调用");
-        return "JobManagerPage.html";
+        return "/JobManagerPage";
     }
 }

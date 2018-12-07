@@ -7,5 +7,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import java.util.List;
 
 public interface UserRoleVoService extends IService<UserRoleVo> {
-    List<UserRoleVo> selectUserListPage(Page<UserRoleVo> page);
+
 }

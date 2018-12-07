@@ -42,7 +42,7 @@ public class SynTimeZoneOffset implements BaseJob {
         Long startTime = System.currentTimeMillis();
 
         //获取所有的MT4账户
-        QueryWrapper<Mt4Account> queryWrapper = new QueryWrapper<Mt4Account>().select("telephone", "user", "broker", "password", "status", "time_zone_offset");
+        QueryWrapper<Mt4Account> queryWrapper = new QueryWrapper<Mt4Account>().select("user_id", "user", "broker", "password", "status", "time_zone_offset","is_default","create_time","update_time");
         List<Mt4Account> mt4AccountList = imt4AccountService.list(queryWrapper);
 
         //对每一个账户进行处理
@@ -79,7 +79,7 @@ public class SynTimeZoneOffset implements BaseJob {
                             mt4Account.setTimeZoneOffset(offset);
 
                             //更新账户的资产数据
-                            UpdateWrapper<Mt4Account> updateWrapper = new UpdateWrapper<Mt4Account>().eq("telephone", mt4Account.getTelephone()).eq("user", mt4Account.getUser());
+                            UpdateWrapper<Mt4Account> updateWrapper = new UpdateWrapper<Mt4Account>().eq("user_id", mt4Account.getUserId()).eq("user", mt4Account.getUser());
                             imt4AccountService.update(mt4Account, updateWrapper);
                         }
 

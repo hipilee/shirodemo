@@ -15,7 +15,7 @@ import java.util.Date;
 @TableName("history_orders")
 public class HistoryOrderBean implements Cloneable {
 
-    private Long telephone;
+    private Long userId;
     private String user;
 
     //    订单编号
@@ -39,14 +39,16 @@ public class HistoryOrderBean implements Cloneable {
     private BigDecimal swap;
     private BigDecimal profit;
     private String comment;
+    private Date createTime;
+    private Date updateTime;
 
     public static class Builder {
 
         private HistoryOrderBean historyOrderBean;
 
-        public Builder(Long telephone, String user, long orderNumber) {
+        public Builder(Long userId, String user, long orderNumber) {
             historyOrderBean = new HistoryOrderBean();
-            historyOrderBean.setTelephone(telephone);
+            historyOrderBean.setUserId(userId);
             historyOrderBean.setUser(user);
             historyOrderBean.setOrderNumber(orderNumber);
         }

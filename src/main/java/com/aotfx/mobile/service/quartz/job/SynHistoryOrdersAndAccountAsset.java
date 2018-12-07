@@ -10,7 +10,10 @@ import com.aotfx.mobile.service.nj4x.IAccountAssetService;
 import com.aotfx.mobile.service.nj4x.IHistoryOrderService;
 import com.aotfx.mobile.service.nj4x.IMT4AccountService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.jfx.*;
+import com.jfx.Broker;
+import com.jfx.ErrNoOrderSelected;
+import com.jfx.SelectionPool;
+import com.jfx.SelectionType;
 import com.jfx.strategy.Strategy;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
@@ -58,7 +61,7 @@ public class SynHistoryOrdersAndAccountAsset implements BaseJob {
         Long startTime = System.currentTimeMillis();
 
         //从数据库中读取用户
-        QueryWrapper<Mt4Account> queryWrapper = new QueryWrapper<Mt4Account>().select("telephone", "user", "broker", "password", "status","time_zone_offset");
+        QueryWrapper<Mt4Account> queryWrapper = new QueryWrapper<Mt4Account>().select("user_id", "user", "broker", "password", "status", "time_zone_offset","is_default","create_time","update_time");
         List<Mt4Account> mt4AccountList = imt4AccountService.list(queryWrapper);
 
         //循环获取mt4账户和密码
@@ -126,7 +129,7 @@ public class SynHistoryOrdersAndAccountAsset implements BaseJob {
 
         //取得最后平仓的历史持仓里面的订单
         QueryWrapper<HistoryOrderBean> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("telephone", mt4Account.getTelephone()).eq("user", mt4Account.getUser()).orderByDesc("close_time").last("limit 1");
+        queryWrapper.eq("user_id", mt4Account.getUserId()).eq("user", mt4Account.getUser()).orderByDesc("close_time").last("limit 1");
         HistoryOrderBean historyOrderBean = iHistoryOrderService.getOne(queryWrapper);
 
 //
@@ -184,7 +187,7 @@ public class SynHistoryOrdersAndAccountAsset implements BaseJob {
         totalProfit = allOrdersProfit.subtract(balanceOrdersProfit).setScale(2, ROUND_HALF_UP);
 
 
-        AccountAssetBean accountAssetBean = new AccountAssetBean.Builder(mt4Account.getTelephone(), mt4Account.getUser()).
+        AccountAssetBean accountAssetBean = new AccountAssetBean.Builder(mt4Account.getUserId(), mt4Account.getUser()).
                 balance(new BigDecimal(mt4c.accountBalance()).setScale(2, ROUND_HALF_UP)).
                 credit(new BigDecimal(mt4c.accountCredit()).setScale(2, ROUND_HALF_UP)).
                 deposit(deposit.setScale(2, ROUND_HALF_UP)).
@@ -201,15 +204,18 @@ public class SynHistoryOrdersAndAccountAsset implements BaseJob {
     private void databaseCRUD(Vector<HistoryOrderBean> histroyOrderBeanVector, AccountAssetBean accountAssetBean) {
 
         //更新账户的资产数据
-        QueryWrapper<AccountAssetBean> queryWrapper = new QueryWrapper<AccountAssetBean>().eq("telephone", accountAssetBean.getTelephone()).eq("user", accountAssetBean.getUser());
-        iAccountAssetService.update(accountAssetBean, queryWrapper);
+        QueryWrapper<AccountAssetBean> queryWrapper = new QueryWrapper<AccountAssetBean>().eq("user_id", accountAssetBean.getUserId()).eq("user", accountAssetBean.getUser());
+        if(iAccountAssetService.getOne(queryWrapper)==null){
+            iAccountAssetService.save(accountAssetBean);
+        }else{
+        iAccountAssetService.update(accountAssetBean, queryWrapper);}
 
         //批量更新历史持仓订单信息
         iHistoryOrderService.saveBatch(histroyOrderBeanVector);
     }
 
     private HistoryOrderBean construct(Mt4Account mt4Account, Mt4c mt4c) throws ErrNoOrderSelected {
-        HistoryOrderBean historyOrderBean = new HistoryOrderBean.Builder(mt4Account.getTelephone(), mt4Account.getUser(), mt4c.orderTicketNumber())
+        HistoryOrderBean historyOrderBean = new HistoryOrderBean.Builder(mt4Account.getUserId(), mt4Account.getUser(), mt4c.orderTicketNumber())
                 .openTime(mt4c.orderOpenTime())
                 .type(mt4c.orderType()).size(mt4c.orderLots()).symbol(mt4c.orderSymbol())
                 .openPrice(new BigDecimal(mt4c.orderOpenPrice()).setScale(5, ROUND_HALF_UP))

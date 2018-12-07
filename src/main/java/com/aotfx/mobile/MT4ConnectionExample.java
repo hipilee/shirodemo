@@ -44,6 +44,7 @@ import com.jfx.SelectionPool;
 import com.jfx.SelectionType;
 import com.jfx.net.JFXServer;
 import com.jfx.strategy.Strategy;
+import org.apache.shiro.crypto.hash.Md5Hash;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -79,6 +80,7 @@ public class MT4ConnectionExample extends Strategy {
 
 
         MT4ConnectionExample mt4c = new MT4ConnectionExample();
+
 
         System.out.println("======= Connecting ========= " + JFXServer.getInstance().getBindPort());
         mt4c.connect();
