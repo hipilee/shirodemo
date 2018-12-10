@@ -8,6 +8,6 @@ import java.util.Map;
 
 public interface IUserService extends IService<User> {
 
-    boolean registerUser(String telephone, String username, String password,String captcha);
+    String registerUser(String telephone, String username, String password,String captcha) throws Exception;
 
 }

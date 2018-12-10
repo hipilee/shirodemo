@@ -21,23 +21,31 @@ public class UserService extends ServiceImpl<UserMapper, User> implements IUserS
     private final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     @Override
-    public boolean registerUser(String telephone, String username, String password, String captcha) {
-
-        boolean res;
-        QueryWrapper<User> isExistByTelephone = new QueryWrapper<>();
+    public String registerUser(String telephone, String username, String password, String captcha) throws Exception{
+        StringBuffer res = new StringBuffer();
         String encrypt_telephone;
         try {
             encrypt_telephone = Base64.encodeBase64String(RSA.encryptByPrivateKey(telephone.getBytes(), RSA.getAotfxPrivateKey()));
 
         } catch (Exception e) {
             logger.error("对 " + telephone + " 私钥加密异常！");
-            return false;
+            throw new Exception(e);
         }
-        isExistByTelephone.eq("encrypt_telephone", encrypt_telephone);
-        final User user = this.baseMapper.selectOne(isExistByTelephone);
-        if (user == null) {
+        QueryWrapper<User> qw_1 = new QueryWrapper<>();
+        qw_1.eq("encrypt_telephone", encrypt_telephone);
+        User user_1 = this.baseMapper.selectOne(qw_1);
 
+        QueryWrapper<User> qw_2 = new QueryWrapper<>();
+        qw_2.eq("user_name", username);
+        User user_2 = this.baseMapper.selectOne(qw_2);
+        if(user_1 != null){
+            res.append("手机号码已被注册!");
+        }
+        if(user_2 != null){
+            res.append("昵称已经存在!");
+        }
 
+        if(res.length() == 0){
             /*
              * MD5加密：使用SimpleHash类对原始密码进行加密。
              * @param algrithm Name 代表使用MD5方式加密
@@ -66,11 +74,9 @@ public class UserService extends ServiceImpl<UserMapper, User> implements IUserS
             registerUser.setUpdateTime(null);
             registerUser.setEncryptTelephone(encrypt_telephone);
             this.baseMapper.insert(registerUser);
-            res = true;
-        } else {
-            res = false;
+            res.append("注册成功");
         }
 
-        return res;
+        return res.toString();
     }
 }

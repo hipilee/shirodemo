@@ -34,23 +34,24 @@ public class MyController extends AotfxBaseController {
 
     @ResponseBody
     @RequestMapping(value = "/doLogin", method = {RequestMethod.POST, RequestMethod.GET})
-    public SysResult doLogin(@RequestParam(name = "telephone") String telephone,
-                             @RequestParam("password") String password, @RequestParam("captcha") String captcha) {
+    public SysResult doLogin(@RequestParam(value = "telephone",required = false) String telephone,
+                             @RequestParam(value = "password",required = false) String password, @RequestParam(value = "captcha",required = false) String captcha) {
 
 
         // 创建Subject实例
+        logger.info("当前用户的telephone:" + telephone);
         Subject currentUser = SecurityUtils.getSubject();
 
         Session session = currentUser.getSession(true);
 
         User user = session.getAttribute("user") != null ? (User) session.getAttribute("user") : null;
-        logger.info("当前用户的sessionID" + session.getId());
+        logger.info("当前用户的sessionID:" + session.getId());
 
         String telephoneFromSession;
         try {
             telephoneFromSession = user == null ? null : new String(RSA.decryptByPublicKey(Base64.decodeBase64(user.getEncryptTelephone()), RSA.getAotfxPublicKey()));
         } catch (Exception e) {
-            return SysResult.build(10, "登录失败,服务器内部错误", null);
+            return SysResult.build(-1, "登录失败,服务器内部错误", null);
         }
 
         // 判断当前用户是否登录
@@ -76,14 +77,13 @@ public class MyController extends AotfxBaseController {
 
                 } catch (Exception e) {
                     logger.error("对 " + telephone + " 私钥加密异常！");
-                    return SysResult.build(10, "登录失败,服务器内部错误", null);
+                    return SysResult.build(-1, "登录失败,服务器内部错误", null);
                 }
                 isExistByTelephone.eq("encrypt_telephone", encrypt_telephone);
                 final User userFromDb = iUserService.getOne(isExistByTelephone);
 
                 UsernamePasswordToken token;
                 if (userFromDb == null) {
-
                     throw new AuthenticationException("用户不存在！");
                 } else {
                     // 将用户名及密码封装到UsernamePasswordToken
@@ -96,7 +96,7 @@ public class MyController extends AotfxBaseController {
                 session.setAttribute("user", userFromDb);
 
             } catch (AuthenticationException e) {
-                return SysResult.build(11, "登录失败,用户名或者密码错误", null);
+                return SysResult.build(-1, e.getMessage(), null);
             }
         }
 
@@ -107,15 +107,22 @@ public class MyController extends AotfxBaseController {
 
     @RequestMapping("/doRegister")
     @ResponseBody
-    public SysResult doRegister(@RequestParam(value = "telephone") String telephone, @RequestParam(value = "username") String username, @RequestParam(value = "password") String password, @RequestParam(value = "captcha") String captcha) {
+    public SysResult doRegister(@RequestParam(value = "telephone",required = false) String telephone, @RequestParam(value = "username",required = false) String username, @RequestParam(value = "password",required = false) String password, @RequestParam(value = "captcha",required = false) String captcha) {
 
-        System.out.print("telephone " + telephone);
+        logger.info("注册telephone:" + telephone);
 
-        boolean result = iUserService.registerUser(telephone, username, password, captcha);
-        if (result) {
-            return new SysResult<Object>(10, "注册成功", "");
+        String result;
+        try {
+            result = iUserService.registerUser(telephone, username, password, captcha);
+            if (result != null && result.equals("注册成功")) {
+                return new SysResult<Object>(10, result, "");
+            }else{
+                return new SysResult<Object>(-1, result, "");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new SysResult<Object>(-1, e.getMessage(), "");
         }
-        return new SysResult<Object>(11, "信息有误，检查后重试", "");
     }
 
     @RequestMapping(value = "/login")
